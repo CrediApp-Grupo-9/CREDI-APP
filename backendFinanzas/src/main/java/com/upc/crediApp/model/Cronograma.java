@@ -28,14 +28,13 @@ public class Cronograma {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @JsonIgnore
-    @ManyToMany
-    private List<Vehiculo> vehiculos;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "informacion_id", referencedColumnName = "id")
     private Informacion informacion;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "vehiculo_id", referencedColumnName = "id")
+    private Vehiculo vehiculo;
 
 /*    @Column(name = "cuota_final", length = 100, nullable = false)
     public Cuota cuotaFinal;*/

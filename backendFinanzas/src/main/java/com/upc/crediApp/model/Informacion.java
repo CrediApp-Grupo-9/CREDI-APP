@@ -27,7 +27,7 @@ public class Informacion {
     @Column(name = "tipo_tasa_interes", length = 100, nullable = false)
     public String tipoTasaInteres;
     @Column(name = "plazo_tasa_interes", length = 100, nullable = false)
-    public int plazoTasaInteres;
+    public String plazoTasaInteres;
     @Column(name = "abreviatura_tasa_interes", length = 100, nullable = false)
     public String abreviaturaTasaInteres;
     @Column(name = "porcentaje_tasa_interes", length = 100, nullable = false)
@@ -62,13 +62,15 @@ public class Informacion {
     public double porcentajeCuotaFinal;
     @Column(name = "monto_cuota_final", length = 100, nullable = false)
     public double montoCuotaFinal;
+    @Column(name = "frecuencia_pago", length = 100, nullable = false)
+    public String frecuenciaPago;
 
     @JsonIgnore
     @ManyToMany
     private List<Moneda> monedas;
 
-    @OneToOne(mappedBy = "informacion")
-    private Cronograma cronograma;
+/*    @OneToOne(mappedBy = "informacion")
+    private Cronograma cronograma;*/
 
 
 }

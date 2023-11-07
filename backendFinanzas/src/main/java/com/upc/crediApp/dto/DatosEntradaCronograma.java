@@ -4,9 +4,13 @@ import jakarta.annotation.Nullable;
 import lombok.Data;
 
 @Data
-public class CalculoCronogramaDTO {
+public class DatosEntradaCronograma {
 
+    //Informacion correspondiente al vehiculo
     public double precioVehiculo;
+    public String marcaVehiculo;
+    public String modeloVehiculo;
+    //Informacion correspondiente al cronograma
     public int numeroAnios;
     public double porcentajeCuotaInicial;
     public String tipoTasaInteres;

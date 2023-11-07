@@ -22,4 +22,8 @@ public class Vehiculo {
     public String modelo;
     @Column(name = "precio", length = 100, nullable = false)
     public double precio;
+
+/*    @OneToOne(mappedBy = "vehiculo")
+    private Cronograma cronograma;*/
+
 }

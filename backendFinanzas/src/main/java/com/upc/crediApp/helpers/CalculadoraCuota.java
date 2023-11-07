@@ -1,6 +1,6 @@
 package com.upc.crediApp.helpers;
 
-import com.upc.crediApp.dto.CalculoCronogramaDTO;
+import com.upc.crediApp.dto.DatosEntradaCronograma;
 import com.upc.crediApp.model.Cuota;
 
 import java.util.ArrayList;
@@ -69,43 +69,43 @@ public class CalculadoraCuota {
     }
 
 
-    public static List<Cuota> obtenerListaCuotasMetodoSinPlazoGracia(CalculoCronogramaDTO calculoCronogramaDTO){
+    public static List<Cuota> obtenerListaCuotasMetodoSinPlazoGracia(DatosEntradaCronograma datosEntradaCronograma){
 
         //Variables Intermedias:
-        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(calculoCronogramaDTO.getPorcentajeCuotaInicial(),calculoCronogramaDTO.getPorcentajeCuotaFinal());
+        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
 
-        String fechaInicio = calculoCronogramaDTO.getFechaInicio();
+        String fechaInicio = datosEntradaCronograma.getFechaInicio();
 
         //sacar tasa efectiva de acuerdo a la frecuencia de pago
         double tasaEfectiva;
         //Si la tasa es efectiva, solo se pasa a la frecuencia de pago
-        if(calculoCronogramaDTO.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
+        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
 
-            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(calculoCronogramaDTO.getPorcentajeTasaInteres(),calculoCronogramaDTO.getPlazoTasaInteres(),calculoCronogramaDTO.getFrecuenciaPago());
+            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
         }else{
             //Si no es efectiva (osea es nominal), se convierte a efectiva
             //La tasa efectiva nominal debe ser pasada a una tasa efectiva de acuerdo a la frecuencia de pago
-            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(calculoCronogramaDTO.getPlazoTasaInteres(),calculoCronogramaDTO.getPorcentajeTasaInteres(),calculoCronogramaDTO.getCapitalizacion(),calculoCronogramaDTO.getFrecuenciaPago());
+            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
         }
 
 
         //sacar tasa seguro desgravamen de acuerdo a la frecuencia de pago
-        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(calculoCronogramaDTO.getFrecuenciaPago(),calculoCronogramaDTO.getTiempoSeguroDesgravamen(),calculoCronogramaDTO.getPorcentajeSeguroDesgravamen());
+        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
 
         //sacar valor del seguro vehicular de acuerdo a la frecuencia de pago
-        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(calculoCronogramaDTO.getFrecuenciaPago(),calculoCronogramaDTO.getTiempoSeguroVehicular(),calculoCronogramaDTO.getPorcentajeSeguroVehicular());
+        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular());
 
         //sacar monto a financiar
-        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
+        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
 
         //sacar cuota inicial
-        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),calculoCronogramaDTO.getPorcentajeCuotaInicial());
+        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial());
 
         //sacar cuota final
-        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),calculoCronogramaDTO.getPorcentajeCuotaFinal()) ;
+        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()) ;
 
         //calculamos cuotas totales
-        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(calculoCronogramaDTO.getNumeroAnios(),calculoCronogramaDTO.getFrecuenciaPago());
+        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
 
         double montoPrestamo= montoAFinanciar;
         double amortizacion=0;
@@ -113,9 +113,9 @@ public class CalculadoraCuota {
         double cuota= CalculadoraCuota.realizarCalculoCuotaMensual(montoPrestamo,tasaEfectiva,tasaDesgravamen, (int) numeroCuotas);
         double valorSeguroDesgravamen=0;
 
-        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(calculoCronogramaDTO.getPrecioVehiculo(), seguroVehicular), 2);
+        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), seguroVehicular), 2);
 
-        double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
+        double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales(),2);
 
         //Instanciamos lista de cuotas
         List<Cuota> listaCuotas = new ArrayList<>();
@@ -128,9 +128,9 @@ public class CalculadoraCuota {
             if(cuotaActual!=0){
                 interes= Utilidades.redondear(montoPrestamo*(tasaEfectiva/100),2);
                 valorSeguroDesgravamen=Utilidades.redondear(CalculadoraSeguroDesgravamen.calcularSeguroDesgravamenConPrestamo(montoPrestamo,tasaDesgravamen),2);
-                amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular-calculoCronogramaDTO.getPortes()-calculoCronogramaDTO.getCostosRegistrales()-calculoCronogramaDTO.getCostosNotariales(),2);
+                amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular- datosEntradaCronograma.getPortes()- datosEntradaCronograma.getCostosRegistrales()- datosEntradaCronograma.getCostosNotariales(),2);
                 montoPrestamo= Utilidades.redondear(montoPrestamo-amortizacion,2);
-                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual,calculoCronogramaDTO.getFrecuenciaPago());
+                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual, datosEntradaCronograma.getFrecuenciaPago());
 
                 cuotaNueva.setMontoDelPrestamo(montoPrestamo);
                 cuotaNueva.setNumeroDeCuota(cuotaActual);
@@ -138,9 +138,9 @@ public class CalculadoraCuota {
                 cuotaNueva.setInteres(interes);
                 cuotaNueva.setSeguroDesgravamen(valorSeguroDesgravamen);
                 cuotaNueva.setSeguroVehicular(valorSeguroVehicular);
-                cuotaNueva.setPortes(calculoCronogramaDTO.getPortes());
-                cuotaNueva.setCostosRegistrales(calculoCronogramaDTO.getCostosRegistrales());
-                cuotaNueva.setCostosNotariales(calculoCronogramaDTO.getCostosNotariales());
+                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
+                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
                 cuotaNueva.setCuotaTotal(cuotaTotal);
                 cuotaNueva.setFechaDePago(fechaPago);
 
@@ -176,56 +176,56 @@ public class CalculadoraCuota {
         ultimaCuota.setInteres(interes);
         ultimaCuota.setSeguroDesgravamen(valorSeguroDesgravamen);
         ultimaCuota.setSeguroVehicular(valorSeguroVehicular);
-        ultimaCuota.setPortes(calculoCronogramaDTO.getPortes());
-        ultimaCuota.setCostosRegistrales(calculoCronogramaDTO.getCostosRegistrales());
-        ultimaCuota.setCostosNotariales(calculoCronogramaDTO.getCostosNotariales());
-        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales());
-        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, calculoCronogramaDTO.getFrecuenciaPago()));
+        ultimaCuota.setPortes(datosEntradaCronograma.getPortes());
+        ultimaCuota.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+        ultimaCuota.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
+        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales());
+        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, datosEntradaCronograma.getFrecuenciaPago()));
 
         listaCuotas.add(ultimaCuota);
 
         return listaCuotas;
     }
 
-    public static List<Cuota> obtenerListaCuotasMetodoConPlazoGraciaParcial(CalculoCronogramaDTO calculoCronogramaDTO){
+    public static List<Cuota> obtenerListaCuotasMetodoConPlazoGraciaParcial(DatosEntradaCronograma datosEntradaCronograma){
         //Variables Intermedias:
-        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(calculoCronogramaDTO.getPorcentajeCuotaInicial(),calculoCronogramaDTO.getPorcentajeCuotaFinal());
+        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
 
-        String fechaInicio = calculoCronogramaDTO.getFechaInicio();
+        String fechaInicio = datosEntradaCronograma.getFechaInicio();
 
         //sacar tasa efectiva de acuerdo a la frecuencia de pago
         double tasaEfectiva;
         //Si la tasa es efectiva, solo se pasa a la frecuencia de pago
-        if(calculoCronogramaDTO.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
+        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
 
-            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(calculoCronogramaDTO.getPorcentajeTasaInteres(),calculoCronogramaDTO.getPlazoTasaInteres(),calculoCronogramaDTO.getFrecuenciaPago());
+            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
         }else{
             //Si no es efectiva (osea es nominal), se convierte a efectiva
             //La tasa efectiva nominal debe ser pasada a una tasa efectiva de acuerdo a la frecuencia de pago
-            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(calculoCronogramaDTO.getPlazoTasaInteres(),calculoCronogramaDTO.getPorcentajeTasaInteres(),calculoCronogramaDTO.getCapitalizacion(),calculoCronogramaDTO.getFrecuenciaPago());
+            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
         }
 
 
 
         //sacar tasa seguro desgravamen de acuerdo a la frecuencia de pago
-        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(calculoCronogramaDTO.getFrecuenciaPago(),calculoCronogramaDTO.getTiempoSeguroDesgravamen(),calculoCronogramaDTO.getPorcentajeSeguroDesgravamen());
+        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
 
         //sacar valor del seguro vehicular de acuerdo a la frecuencia de pago
-        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(calculoCronogramaDTO.getFrecuenciaPago(),calculoCronogramaDTO.getTiempoSeguroVehicular(),calculoCronogramaDTO.getPorcentajeSeguroVehicular());
+        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular());
 
         //sacar monto a financiar
-        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
+        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
 
         //sacar cuota inicial
-        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),calculoCronogramaDTO.getPorcentajeCuotaInicial());
+        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial());
 
         //sacar cuota final
-        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),calculoCronogramaDTO.getPorcentajeCuotaFinal()) ;
+        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()) ;
 
         //calculamos cuotas totales
-        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(calculoCronogramaDTO.getNumeroAnios(), calculoCronogramaDTO.getFrecuenciaPago());
+        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
         //Calculamos cuotas de plazo de gracia
-        double numeroCuotasParciales= (double) calculoCronogramaDTO.getTiempoPlazoDeGracia();
+        double numeroCuotasParciales= (double) datosEntradaCronograma.getTiempoPlazoDeGracia();
 
         double montoPrestamo= montoAFinanciar;
         double amortizacion=0;
@@ -233,7 +233,7 @@ public class CalculadoraCuota {
         double cuota= 0;
         double valorSeguroDesgravamen=0;
 
-        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(calculoCronogramaDTO.getPrecioVehiculo(), seguroVehicular), 2);
+        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), seguroVehicular), 2);
 
         //double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
         double cuotaTotal=0;
@@ -252,16 +252,17 @@ public class CalculadoraCuota {
 
                 if(cuotaActual<=numeroCuotasParciales){
                     amortizacion=0;
-                    cuotaTotal=interes+valorSeguroDesgravamen;
+                    //La cuota total en el caso de plazo de gracia parcial la cuota es igual a los intereses, sin embargo sumando el seguro desgravamen y los costos periodicos...
+                    cuotaTotal=interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales();
                 }else{
                     cuota= CalculadoraCuota.realizarCalculoCuotaMensualPlazoGraciaParcial(montoPrestamo,tasaEfectiva,tasaDesgravamen, (int) numeroCuotas,cuotaActual-1);
-                    cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
-                    amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular-calculoCronogramaDTO.getPortes()-calculoCronogramaDTO.getCostosRegistrales()-calculoCronogramaDTO.getCostosNotariales(),2);
+                    cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales(),2);
+                    amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular- datosEntradaCronograma.getPortes()- datosEntradaCronograma.getCostosRegistrales()- datosEntradaCronograma.getCostosNotariales(),2);
                 }
 
                 montoPrestamo= Utilidades.redondear(montoPrestamo-amortizacion,2);
 
-                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual,calculoCronogramaDTO.getFrecuenciaPago());
+                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual, datosEntradaCronograma.getFrecuenciaPago());
 
                 cuotaNueva.setMontoDelPrestamo(montoPrestamo);
                 cuotaNueva.setNumeroDeCuota(cuotaActual);
@@ -269,9 +270,9 @@ public class CalculadoraCuota {
                 cuotaNueva.setInteres(interes);
                 cuotaNueva.setSeguroDesgravamen(valorSeguroDesgravamen);
                 cuotaNueva.setSeguroVehicular(valorSeguroVehicular);
-                cuotaNueva.setPortes(calculoCronogramaDTO.getPortes());
-                cuotaNueva.setCostosRegistrales(calculoCronogramaDTO.getCostosRegistrales());
-                cuotaNueva.setCostosNotariales(calculoCronogramaDTO.getCostosNotariales());
+                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
+                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
                 cuotaNueva.setCuotaTotal(cuotaTotal);
                 cuotaNueva.setFechaDePago(fechaPago);
 
@@ -307,56 +308,56 @@ public class CalculadoraCuota {
         ultimaCuota.setInteres(interes);
         ultimaCuota.setSeguroDesgravamen(valorSeguroDesgravamen);
         ultimaCuota.setSeguroVehicular(valorSeguroVehicular);
-        ultimaCuota.setPortes(calculoCronogramaDTO.getPortes());
-        ultimaCuota.setCostosRegistrales(calculoCronogramaDTO.getCostosRegistrales());
-        ultimaCuota.setCostosNotariales(calculoCronogramaDTO.getCostosNotariales());
-        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales());
-        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, calculoCronogramaDTO.getFrecuenciaPago()));
+        ultimaCuota.setPortes(datosEntradaCronograma.getPortes());
+        ultimaCuota.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+        ultimaCuota.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
+        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales());
+        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, datosEntradaCronograma.getFrecuenciaPago()));
 
         listaCuotas.add(ultimaCuota);
 
         return listaCuotas;
     }
 
-    public static List<Cuota> obtenerListaCuotasMetodoConPlazoGraciaTotal(CalculoCronogramaDTO calculoCronogramaDTO){
+    public static List<Cuota> obtenerListaCuotasMetodoConPlazoGraciaTotal(DatosEntradaCronograma datosEntradaCronograma){
 
         //Variables Intermedias:
-        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(calculoCronogramaDTO.getPorcentajeCuotaInicial(),calculoCronogramaDTO.getPorcentajeCuotaFinal());
+        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
 
-        String fechaInicio = calculoCronogramaDTO.getFechaInicio();
+        String fechaInicio = datosEntradaCronograma.getFechaInicio();
 
 
         //sacar tasa efectiva de acuerdo a la frecuencia de pago
         double tasaEfectiva;
         //Si la tasa es efectiva, solo se pasa a la frecuencia de pago
-        if(calculoCronogramaDTO.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
+        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
 
-            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(calculoCronogramaDTO.getPorcentajeTasaInteres(),calculoCronogramaDTO.getPlazoTasaInteres(),calculoCronogramaDTO.getFrecuenciaPago());
+            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
         }else{
             //Si no es efectiva (osea es nominal), se convierte a efectiva
             //La tasa efectiva nominal debe ser pasada a una tasa efectiva de acuerdo a la frecuencia de pago
-            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(calculoCronogramaDTO.getPlazoTasaInteres(),calculoCronogramaDTO.getPorcentajeTasaInteres(),calculoCronogramaDTO.getCapitalizacion(),calculoCronogramaDTO.getFrecuenciaPago());
+            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
         }
 
         //sacar tasa seguro desgravamen de acuerdo a la frecuencia de pago
-        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(calculoCronogramaDTO.getFrecuenciaPago(),calculoCronogramaDTO.getTiempoSeguroDesgravamen(),calculoCronogramaDTO.getPorcentajeSeguroDesgravamen());
+        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
 
         //sacar valor del seguro vehicular de acuerdo a la frecuencia de pago
-        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(calculoCronogramaDTO.getFrecuenciaPago(),calculoCronogramaDTO.getTiempoSeguroVehicular(),calculoCronogramaDTO.getPorcentajeSeguroVehicular());
+        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular());
 
         //sacar monto a financiar
-        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
+        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
 
         //sacar cuota inicial
-        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),calculoCronogramaDTO.getPorcentajeCuotaInicial());
+        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial());
 
         //sacar cuota final
-        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(calculoCronogramaDTO.getPrecioVehiculo(),calculoCronogramaDTO.getPorcentajeCuotaFinal()) ;
+        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()) ;
 
         //calculamos cuotas totales
-        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(calculoCronogramaDTO.getNumeroAnios(),calculoCronogramaDTO.getFrecuenciaPago());
+        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
         //Calculamos cuotas de plazo de gracia
-        double numeroCuotasPlazoTotal= (double) calculoCronogramaDTO.getTiempoPlazoDeGracia();
+        double numeroCuotasPlazoTotal= (double) datosEntradaCronograma.getTiempoPlazoDeGracia();
 
         double montoPrestamo= montoAFinanciar;
         double amortizacion=0;
@@ -364,7 +365,7 @@ public class CalculadoraCuota {
         double cuota= 0;
         double valorSeguroDesgravamen=0;
 
-        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(calculoCronogramaDTO.getPrecioVehiculo(), seguroVehicular), 2);
+        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), seguroVehicular), 2);
 
         //double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
         double cuotaTotal=0;
@@ -384,16 +385,17 @@ public class CalculadoraCuota {
                 if(cuotaActual<=numeroCuotasPlazoTotal){
                     amortizacion=0;
                     montoPrestamo += interes;
-                    cuotaTotal=valorSeguroDesgravamen;
+                    //La cuota total en el caso de plazo de gracia total debe ser 0 porque no se paga nada , sin embargo si se tiene en cuenta los costos periodicos...
+                    cuotaTotal=valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales();
                 }else{
                     cuota= CalculadoraCuota.realizarCalculoCuotaMensualPlazoGraciaParcial(montoPrestamo,tasaEfectiva,tasaDesgravamen, (int) numeroCuotas,cuotaActual-1);
-                    cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
-                    amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular-calculoCronogramaDTO.getPortes()-calculoCronogramaDTO.getCostosRegistrales()-calculoCronogramaDTO.getCostosNotariales(),2);
+                    cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales(),2);
+                    amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular- datosEntradaCronograma.getPortes()- datosEntradaCronograma.getCostosRegistrales()- datosEntradaCronograma.getCostosNotariales(),2);
                 }
 
                 montoPrestamo= Utilidades.redondear(montoPrestamo-amortizacion,2);
 
-                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual,calculoCronogramaDTO.getFrecuenciaPago());
+                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual, datosEntradaCronograma.getFrecuenciaPago());
 
                 cuotaNueva.setMontoDelPrestamo(montoPrestamo);
                 cuotaNueva.setNumeroDeCuota(cuotaActual);
@@ -401,9 +403,9 @@ public class CalculadoraCuota {
                 cuotaNueva.setInteres(interes);
                 cuotaNueva.setSeguroDesgravamen(valorSeguroDesgravamen);
                 cuotaNueva.setSeguroVehicular(valorSeguroVehicular);
-                cuotaNueva.setPortes(calculoCronogramaDTO.getPortes());
-                cuotaNueva.setCostosRegistrales(calculoCronogramaDTO.getCostosRegistrales());
-                cuotaNueva.setCostosNotariales(calculoCronogramaDTO.getCostosNotariales());
+                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
+                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
                 cuotaNueva.setCuotaTotal(cuotaTotal);
                 cuotaNueva.setFechaDePago(fechaPago);
 
@@ -440,11 +442,11 @@ public class CalculadoraCuota {
         ultimaCuota.setInteres(interes);
         ultimaCuota.setSeguroDesgravamen(valorSeguroDesgravamen);
         ultimaCuota.setSeguroVehicular(valorSeguroVehicular);
-        ultimaCuota.setPortes(calculoCronogramaDTO.getPortes());
-        ultimaCuota.setCostosRegistrales(calculoCronogramaDTO.getCostosRegistrales());
-        ultimaCuota.setCostosNotariales(calculoCronogramaDTO.getCostosNotariales());
-        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales());
-        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, calculoCronogramaDTO.getFrecuenciaPago()));
+        ultimaCuota.setPortes(datosEntradaCronograma.getPortes());
+        ultimaCuota.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+        ultimaCuota.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
+        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales());
+        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, datosEntradaCronograma.getFrecuenciaPago()));
 
         listaCuotas.add(ultimaCuota);
 

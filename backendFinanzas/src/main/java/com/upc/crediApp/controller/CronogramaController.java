@@ -1,6 +1,6 @@
 package com.upc.crediApp.controller;
 
-import com.upc.crediApp.dto.CalculoCronogramaDTO;
+import com.upc.crediApp.dto.DatosEntradaCronograma;
 import com.upc.crediApp.model.Cronograma;
 import com.upc.crediApp.service.inter.CronogramaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,19 +19,19 @@ public class CronogramaController {
     //Method: GET
     @Transactional(readOnly = true)
     @PostMapping("/calculoCronogramaSinPlazoDeGracia")
-    public ResponseEntity<Cronograma> calcularCronogramaSinPlazoDeGracia(@RequestBody CalculoCronogramaDTO calculoCronogramaDTO){
-        return new ResponseEntity<>(cronogramaService.calculoCronogramaSinPlazoDeGracia(calculoCronogramaDTO),org.springframework.http.HttpStatus.OK);
+    public ResponseEntity<Cronograma> calcularCronogramaSinPlazoDeGracia(@RequestBody DatosEntradaCronograma datosEntradaCronograma){
+        return new ResponseEntity<>(cronogramaService.calculoCronogramaSinPlazoDeGracia(datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
     }
 
     @Transactional(readOnly = true)
     @PostMapping("/calculoCronogramaConPlazoDeGraciaParcial")
-    public ResponseEntity<Cronograma> calcularCronogramaConPlazoDeGraciaParcial(@RequestBody CalculoCronogramaDTO calculoCronogramaDTO){
-        return new ResponseEntity<>(cronogramaService.calculoCronogramaConPlazoDeGraciaParcial(calculoCronogramaDTO),org.springframework.http.HttpStatus.OK);
+    public ResponseEntity<Cronograma> calcularCronogramaConPlazoDeGraciaParcial(@RequestBody DatosEntradaCronograma datosEntradaCronograma){
+        return new ResponseEntity<>(cronogramaService.calculoCronogramaConPlazoDeGraciaParcial(datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
     }
 
     @Transactional(readOnly = true)
     @PostMapping("/calculoCronogramaConPlazoDeGraciaTotal")
-    public ResponseEntity<Cronograma> calcularCronogramaConPlazoDeGraciaTotal(@RequestBody CalculoCronogramaDTO calculoCronogramaDTO){
-        return new ResponseEntity<>(cronogramaService.calculoCronogramaConPlazoDeGraciaTotal(calculoCronogramaDTO),org.springframework.http.HttpStatus.OK);
+    public ResponseEntity<Cronograma> calcularCronogramaConPlazoDeGraciaTotal(@RequestBody DatosEntradaCronograma datosEntradaCronograma){
+        return new ResponseEntity<>(cronogramaService.calculoCronogramaConPlazoDeGraciaTotal(datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
     }
 }
