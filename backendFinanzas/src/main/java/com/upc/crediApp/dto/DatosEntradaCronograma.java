@@ -1,6 +1,7 @@
 package com.upc.crediApp.dto;
 
 import jakarta.annotation.Nullable;
+import lombok.Builder;
 import lombok.Data;
 
 @Data

@@ -40,6 +40,7 @@ public class Cuota {
     @Column(name = "cuota_total", length = 100, nullable = false)
     public double cuotaTotal;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cronograma_id", nullable = false)
     private Cronograma cronograma;

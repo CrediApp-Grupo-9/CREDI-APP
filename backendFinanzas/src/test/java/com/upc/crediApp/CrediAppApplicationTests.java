@@ -1,7 +1,6 @@
 package com.upc.crediApp;
 
-import com.upc.crediApp.helpers.CalculadoraTasaInteresNominal;
-import com.upc.crediApp.helpers.Utilidades;
+import com.upc.crediApp.helpers.Calculadora.CalculadoraTasaInteresNominal;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

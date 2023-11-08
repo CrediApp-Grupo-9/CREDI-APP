@@ -1,5 +1,6 @@
-package com.upc.crediApp.helpers;
+package com.upc.crediApp.helpers.Calculadora;
 
+import com.upc.crediApp.helpers.Calculadora.CalculadoraPlazoEnDias;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

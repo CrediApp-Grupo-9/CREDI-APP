@@ -17,21 +17,10 @@ public class CronogramaController {
 
     //URL: http://localhost:8080/api/crediApp/v1/cronograma
     //Method: GET
-    @Transactional(readOnly = true)
-    @PostMapping("/calculoCronogramaSinPlazoDeGracia")
-    public ResponseEntity<Cronograma> calcularCronogramaSinPlazoDeGracia(@RequestBody DatosEntradaCronograma datosEntradaCronograma){
-        return new ResponseEntity<>(cronogramaService.calculoCronogramaSinPlazoDeGracia(datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
-    }
 
     @Transactional(readOnly = true)
-    @PostMapping("/calculoCronogramaConPlazoDeGraciaParcial")
-    public ResponseEntity<Cronograma> calcularCronogramaConPlazoDeGraciaParcial(@RequestBody DatosEntradaCronograma datosEntradaCronograma){
-        return new ResponseEntity<>(cronogramaService.calculoCronogramaConPlazoDeGraciaParcial(datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
-    }
-
-    @Transactional(readOnly = true)
-    @PostMapping("/calculoCronogramaConPlazoDeGraciaTotal")
-    public ResponseEntity<Cronograma> calcularCronogramaConPlazoDeGraciaTotal(@RequestBody DatosEntradaCronograma datosEntradaCronograma){
-        return new ResponseEntity<>(cronogramaService.calculoCronogramaConPlazoDeGraciaTotal(datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
+    @PostMapping("/{customerId}/calculoCronograma")
+    public ResponseEntity<Cronograma> calcularCronograma(@PathVariable Long customerId, @RequestBody DatosEntradaCronograma datosEntradaCronograma){
+        return new ResponseEntity<>(cronogramaService.saveCronograma(customerId,datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
     }
 }

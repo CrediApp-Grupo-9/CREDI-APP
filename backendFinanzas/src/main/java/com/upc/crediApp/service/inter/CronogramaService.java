@@ -10,20 +10,8 @@ import java.util.List;
 public interface CronogramaService {
 
     List<Cronograma> getAllCronogramas();
-    Cronograma createCronogramaParaUsuario(Long idUsuario, Cronograma cronograma);
-
-
     List<Cuota>getAllCuotasByCronograma(Long id);
-
     Informacion getInformacionByCronograma(Long id);
     void deleteCronograma(Long id);
-
-    Cronograma calculoCronogramaSinPlazoDeGracia(DatosEntradaCronograma variablesCalculo);
-
-    Cronograma calculoCronogramaConPlazoDeGraciaParcial(DatosEntradaCronograma variablesCalculo);
-
-    Cronograma calculoCronogramaConPlazoDeGraciaTotal(DatosEntradaCronograma variablesCalculo);
-
-    Cronograma saveCronogramaParaUsuario(Long idUsuario, Cronograma cronograma);
-
+    Cronograma saveCronograma(Long customerId,DatosEntradaCronograma variablesCalculo);
 }
