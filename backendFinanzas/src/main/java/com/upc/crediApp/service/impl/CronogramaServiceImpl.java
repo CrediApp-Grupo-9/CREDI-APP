@@ -107,7 +107,6 @@ public class CronogramaServiceImpl implements CronogramaService {
                 return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
         }
     }
-
     private void convertirTodosLosCamposAMayuscula(DatosEntradaCronograma datosEntradaCronograma){
 
         if(datosEntradaCronograma.getTipoTasaInteres()!=null){
@@ -156,7 +155,6 @@ public class CronogramaServiceImpl implements CronogramaService {
         }
 
     }
-
     private void validarDatosEntrada(DatosEntradaCronograma datosEntradaCronograma){
 
         if(datosEntradaCronograma.getPlazoDeGracia()!=null){
@@ -166,12 +164,11 @@ public class CronogramaServiceImpl implements CronogramaService {
         validacionesCuotaInicial(datosEntradaCronograma);
         validacionesCuotaFinal(datosEntradaCronograma);
     }
-
     private void rellenarCuotas(List<Cuota> listaCuotas, Cronograma cronograma){
         //Lista externa de cuotas
         List<Cuota> cuotas= new ArrayList<>();
-        //Asociar la cuota al cronograma
-        for(Cuota cuota:listaCuotas){;
+        //Asociar cada cuota al cronograma
+        for(Cuota cuota:listaCuotas){
             cuota.setCronograma(cronograma);
             cuotas.add(cuota);
         }
