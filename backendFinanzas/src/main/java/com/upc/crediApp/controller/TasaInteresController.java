@@ -1,8 +1,7 @@
 package com.upc.crediApp.controller;
 
-import com.upc.crediApp.dto.TasaInteresDTO;
+import com.upc.crediApp.dto.TasaInteresDto;
 import com.upc.crediApp.model.TasaInteres;
-import com.upc.crediApp.service.inter.CronogramaService;
 import com.upc.crediApp.service.inter.TasaInteresService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +26,7 @@ public class TasaInteresController {
     //URL : http://localhost:8080/api/crediApp/v1/tasaInteres
     //Method: POST
     @PostMapping()
-    public ResponseEntity<TasaInteres> createTasaInteres(@RequestBody TasaInteresDTO tasaInteresDTO){
+    public ResponseEntity<TasaInteres> createTasaInteres(@RequestBody TasaInteresDto tasaInteresDTO){
         return new ResponseEntity<>(tasaInteresService.createTasaInteres(tasaInteresDTO), org.springframework.http.HttpStatus.CREATED);
     }
 

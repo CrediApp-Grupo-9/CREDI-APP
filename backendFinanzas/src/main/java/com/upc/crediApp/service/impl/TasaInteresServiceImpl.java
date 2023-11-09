@@ -1,11 +1,10 @@
 package com.upc.crediApp.service.impl;
 
-import com.upc.crediApp.dto.TasaInteresDTO;
+import com.upc.crediApp.dto.TasaInteresDto;
 import com.upc.crediApp.exception.ValidationException;
 import com.upc.crediApp.model.TasaInteres;
 import com.upc.crediApp.repository.TasaInteresRepository;
 import com.upc.crediApp.service.inter.TasaInteresService;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,11 +26,11 @@ public class TasaInteresServiceImpl implements TasaInteresService {
         this.modelMapper = new ModelMapper();
     }
 
-    private TasaInteresDTO EntityToDto(TasaInteres tasaInteres){
-        return modelMapper.map(tasaInteres, TasaInteresDTO.class);
+    private TasaInteresDto EntityToDto(TasaInteres tasaInteres){
+        return modelMapper.map(tasaInteres, TasaInteresDto.class);
     }
 
-    private TasaInteres DtoToEntity(TasaInteresDTO tasaInteresDTO){
+    private TasaInteres DtoToEntity(TasaInteresDto tasaInteresDTO){
         return modelMapper.map(tasaInteresDTO, TasaInteres.class);
     }
 
@@ -42,7 +41,7 @@ public class TasaInteresServiceImpl implements TasaInteresService {
     }
 
     @Override
-    public TasaInteres createTasaInteres(TasaInteresDTO tasaInteresDTO) {
+    public TasaInteres createTasaInteres(TasaInteresDto tasaInteresDTO) {
         validationTasaInteres(tasaInteresDTO);
         return tasaInteresRepository.save(DtoToEntity(tasaInteresDTO));
     }
@@ -52,7 +51,7 @@ public class TasaInteresServiceImpl implements TasaInteresService {
         tasaInteresRepository.deleteById(id);
     }
 
-    private void validationTasaInteres(TasaInteresDTO tasaInteresDTO){
+    private void validationTasaInteres(TasaInteresDto tasaInteresDTO){
 
         if (tasaInteresDTO.tipo == null || tasaInteresDTO.tipo.isEmpty()) {
             throw new ValidationException("El tipo de tasa de interes no puede ser nulo o vacio");

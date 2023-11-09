@@ -1,5 +1,6 @@
 package com.upc.crediApp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,7 +42,8 @@ public class Cuota {
     public double cuotaTotal;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
+    @JsonIgnore
     @JoinColumn(name = "cronograma_id", nullable = false)
     private Cronograma cronograma;
 

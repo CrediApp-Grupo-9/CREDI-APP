@@ -4,12 +4,11 @@ import com.upc.crediApp.dto.DatosEntradaCronograma;
 import com.upc.crediApp.exception.ValidationException;
 import com.upc.crediApp.helpers.Calculadora.CalculadoraCuota;
 import com.upc.crediApp.helpers.Utilidades.Utilidades;
-import com.upc.crediApp.model.Cronograma;
-import com.upc.crediApp.model.Cuota;
-import com.upc.crediApp.model.Informacion;
-import com.upc.crediApp.model.Vehiculo;
+import com.upc.crediApp.model.*;
 import com.upc.crediApp.repository.CronogramaRepository;
+import com.upc.crediApp.repository.CuotaRepository;
 import com.upc.crediApp.repository.CustomerRepository;
+import com.upc.crediApp.repository.TasaInteresRepository;
 import com.upc.crediApp.service.inter.CronogramaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,13 @@ public class CronogramaServiceImpl implements CronogramaService {
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    @Autowired
+    private TasaInteresRepository tasaInteresRepository;
+
+    @Autowired
+    private CuotaRepository cuotaRepository;
+
     @Override
     public List<Cronograma> getAllCronogramas() {
         return null;
@@ -51,13 +57,43 @@ public class CronogramaServiceImpl implements CronogramaService {
 
         validarDatosEntrada(datosEntradaCronograma);
 
-        Cronograma nuevoCronograma= new Cronograma();
-        nuevoCronograma.setCuotas(calcularListaCuotasSegunPlazo(datosEntradaCronograma));
-        fillInformation(customerId,datosEntradaCronograma,nuevoCronograma);
+        convertirTodosLosCamposAMayuscula(datosEntradaCronograma);
+
+        Cronograma nuevoCronograma= Cronograma.builder().build();
+
+
+        rellenarCuotas(calcularListaCuotasSegunPlazo(datosEntradaCronograma),nuevoCronograma);
+        rellenarInformacion(datosEntradaCronograma,nuevoCronograma);
+        rellenarVehiculo(datosEntradaCronograma,nuevoCronograma);
+        rellenarCustomer(customerId,nuevoCronograma);
+
+        //Primero se guarda el cronograma y luego se guardan las cuotas del cronograma
+        cronogramaRepository.save(nuevoCronograma)
+                .getCuotas()
+                .forEach(cuota -> cuotaRepository.save(cuota));
 
         return nuevoCronograma;
     }
 
+    @Override
+    public List<Cronograma> getAllCronogramasByCustomerId(Long customerId) {
+        if(!customerRepository.existsById(customerId)){
+            throw new ValidationException("No existe el customer con el id: "+customerId);
+        }
+        return cronogramaRepository.findAllByCustomerId(customerId);
+    }
+
+    private String determinarAbreviaturaTasaInteres(DatosEntradaCronograma datosEntradaCronograma){
+
+        //obtengo los datos del tipo de tasa y su plazo
+        String tipoTasa=datosEntradaCronograma.getTipoTasaInteres();
+        String plazoTasa=datosEntradaCronograma.getPlazoTasaInteres();
+
+        //llamo al repositorio de tasa de interes para obtener la abreviatura
+        TasaInteres tasaInteres=tasaInteresRepository.findByTipoAndPlazo(tipoTasa,plazoTasa);
+
+        return tasaInteres.abreviatura;
+    }
     private List<Cuota> calcularListaCuotasSegunPlazo(DatosEntradaCronograma datosEntradaCronograma){
 
         if(datosEntradaCronograma.getPlazoDeGracia()==null)return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
@@ -72,6 +108,55 @@ public class CronogramaServiceImpl implements CronogramaService {
         }
     }
 
+    private void convertirTodosLosCamposAMayuscula(DatosEntradaCronograma datosEntradaCronograma){
+
+        if(datosEntradaCronograma.getTipoTasaInteres()!=null){
+            datosEntradaCronograma.setTipoTasaInteres(datosEntradaCronograma.getTipoTasaInteres().toUpperCase());
+        }else {
+            throw new ValidationException("No se ingreso el tipo de tasa de interes");
+        }
+
+        if(datosEntradaCronograma.getPlazoTasaInteres()!=null){
+            datosEntradaCronograma.setPlazoTasaInteres(datosEntradaCronograma.getPlazoTasaInteres().toUpperCase());
+        }else {
+            throw new ValidationException("No se ingreso el plazo de la tasa de interes");
+        }
+
+        if(datosEntradaCronograma.getTiempoSeguroDesgravamen()!=null){
+            datosEntradaCronograma.setTiempoSeguroDesgravamen(datosEntradaCronograma.getTiempoSeguroDesgravamen().toUpperCase());
+        }else {
+            throw new ValidationException("No se ingreso el tiempo del seguro de desgravamen");
+        }
+
+        if(datosEntradaCronograma.getTiempoSeguroVehicular()!=null){
+            datosEntradaCronograma.setTiempoSeguroVehicular(datosEntradaCronograma.getTiempoSeguroVehicular().toUpperCase());
+        }else{
+            throw  new ValidationException("No se ingreso el tiempo del seguro vehicular");
+        }
+
+        //la capitalizacion si puede ser nula
+        if(datosEntradaCronograma.getCapitalizacion()!=null){
+            datosEntradaCronograma.setCapitalizacion(datosEntradaCronograma.getCapitalizacion().toUpperCase());
+        }else {
+            datosEntradaCronograma.setCapitalizacion(null);
+        }
+
+        //el plazo de gracia tambien puede ser nulo
+        if(datosEntradaCronograma.getPlazoDeGracia()!=null) {
+            datosEntradaCronograma.setPlazoDeGracia(datosEntradaCronograma.getPlazoDeGracia().toUpperCase());
+        }else {
+            datosEntradaCronograma.setPlazoDeGracia(null);
+        }
+
+        //la frecuencia de pago debe estar si o si
+        if(datosEntradaCronograma.getFrecuenciaPago()!=null) {
+            datosEntradaCronograma.setFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago().toUpperCase());
+        }else {
+            throw new ValidationException("No se ingreso la frecuencia de pago");
+        }
+
+    }
+
     private void validarDatosEntrada(DatosEntradaCronograma datosEntradaCronograma){
 
         if(datosEntradaCronograma.getPlazoDeGracia()!=null){
@@ -81,15 +166,25 @@ public class CronogramaServiceImpl implements CronogramaService {
         validacionesCuotaInicial(datosEntradaCronograma);
         validacionesCuotaFinal(datosEntradaCronograma);
     }
-    public void fillInformation(Long idCustomer,DatosEntradaCronograma datosEntradaCronograma,Cronograma cronograma){
+
+    private void rellenarCuotas(List<Cuota> listaCuotas, Cronograma cronograma){
+        //Lista externa de cuotas
+        List<Cuota> cuotas= new ArrayList<>();
+        //Asociar la cuota al cronograma
+        for(Cuota cuota:listaCuotas){;
+            cuota.setCronograma(cronograma);
+            cuotas.add(cuota);
+        }
+        cronograma.setCuotas(cuotas);
+    }
+    private void rellenarInformacion(DatosEntradaCronograma datosEntradaCronograma, Cronograma cronograma){
 
 
         double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
         //sacar monto a financiar
         double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
 
-
-        //Creamos un objeto Informacion y lo rellenamos con lo que se busca
+        //Creamos un objeto Informacion y lo rellenamos con lo que obtenemos mediante el builder
         Informacion information = Informacion.builder()
                 .numeroAnios(datosEntradaCronograma.numeroAnios)
                 .porcentajeCuotaInicial(datosEntradaCronograma.porcentajeCuotaInicial)
@@ -110,64 +205,26 @@ public class CronogramaServiceImpl implements CronogramaService {
                 .montoCuotaFinal(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),datosEntradaCronograma.getPorcentajeCuotaFinal()))
                 .frecuenciaPago(datosEntradaCronograma.frecuenciaPago)
                 .montoPrestamoFinanciar(montoAFinanciar)
+                .tipoTasaInteres(datosEntradaCronograma.tipoTasaInteres)
+                .plazoDeGracia(datosEntradaCronograma.plazoDeGracia)
+                .abreviaturaTasaInteres(determinarAbreviaturaTasaInteres(datosEntradaCronograma))
                 .build();
-
-
-
-
-
-
-
-        //information.setNumeroAnios(datosEntradaCronograma.getNumeroAnios());
-        //information.setPorcentajeCuotaInicial(datosEntradaCronograma.getPorcentajeCuotaInicial());
-
-        if(datosEntradaCronograma.getTipoTasaInteres()!=null){
-            information.setTipoTasaInteres(datosEntradaCronograma.getTipoTasaInteres().toUpperCase());
-        }else {
-            information.setTipoTasaInteres(null);
-        }
-        //information.setPlazoTasaInteres(datosEntradaCronograma.getPlazoTasaInteres().toUpperCase());
-
-        //information.setAbreviaturaTasaInteres(datosEntradaCronograma.getAbreviaturaTasaInteres);
-        //information.setPorcentajeTasaInteres(datosEntradaCronograma.getPorcentajeTasaInteres());
-
-        information.setCapitalizacion(datosEntradaCronograma.getCapitalizacion());
-        if(datosEntradaCronograma.getCapitalizacion()!=null){
-            information.setCapitalizacion(datosEntradaCronograma.getCapitalizacion().toUpperCase());
-        }else {
-            information.setCapitalizacion(null);
-        }
-        if(datosEntradaCronograma.getPlazoDeGracia()!=null) {
-            information.setPlazoDeGracia(datosEntradaCronograma.getPlazoDeGracia().toUpperCase());
-        }else {
-            information.setPlazoDeGracia(null);
-        }
-        //information.setTiempoPlazoDeGracia(datosEntradaCronograma.getTiempoPlazoDeGracia());
-        //information.setPorcentajeSeguroDesgravamen(datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
-
-        //information.setTiempoSeguroDesgravamen(datosEntradaCronograma.getTiempoSeguroDesgravamen().toUpperCase());
-        //information.setPorcentajeSeguroVehicular(datosEntradaCronograma.getPorcentajeSeguroVehicular());
-        //information.setTiempoSeguroVehicular(datosEntradaCronograma.getTiempoSeguroVehicular());
-        //information.setPortes(datosEntradaCronograma.getPortes());
-        //information.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-        //information.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-        //information.setFechaInicio(datosEntradaCronograma.getFechaInicio());
-
-        //information.setPorcentajePrestamoFinanciar(montoAFinanciar);
-        //information.setPorcentajeCuotaFinal(datosEntradaCronograma.getPorcentajeCuotaFinal());
-        //information.setMontoCuotaFinal(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),datosEntradaCronograma.getPorcentajeCuotaFinal()));
-        //information.setFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago().toUpperCase());
-
-        //Creamos un objeto vehiculo y lo rellenamos con lo que se busca
-        Vehiculo vehiculo = new Vehiculo();
-        vehiculo.setPrecio(datosEntradaCronograma.getPrecioVehiculo());
-        vehiculo.setMarca(datosEntradaCronograma.getMarcaVehiculo());
-        vehiculo.setModelo(datosEntradaCronograma.getModeloVehiculo());
-
         //Se actualiza el cronograma
         cronograma.setInformacion(information);
-        cronograma.setVehiculo(vehiculo);
 
+    }
+    private void rellenarVehiculo(DatosEntradaCronograma datosEntradaCronograma, Cronograma cronograma){
+
+
+        Vehiculo vehiculo = Vehiculo.builder()
+                        .precio(datosEntradaCronograma.getPrecioVehiculo())
+                        .marca(datosEntradaCronograma.getMarcaVehiculo())
+                        .modelo(datosEntradaCronograma.getModeloVehiculo())
+                        .build();
+        //Se actualiza el cronograma
+        cronograma.setVehiculo(vehiculo);
+    }
+    public void rellenarCustomer(Long idCustomer, Cronograma cronograma){
         //Se actualiza el customer
         //Encontramos al customer por su id
         customerRepository.findById(idCustomer).ifPresent(customer -> {
@@ -175,11 +232,9 @@ public class CronogramaServiceImpl implements CronogramaService {
             cronograma.setCustomer(customer);
             //customer.getCronograma().add(cronograma);
             //Se actualiza el customer
-            customerRepository.save(customer);
+            //customerRepository.save(customer);
         });
-
     }
-
     private void validacionesConPlazoGracia(DatosEntradaCronograma datosEntradaCronograma){
 
         double cuotasTotales=CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
@@ -246,12 +301,6 @@ public class CronogramaServiceImpl implements CronogramaService {
             throw new ValidationException("No existe el customer con el id: "+idCustomer);
         }
     }
-
-
-
-
-
-
 
 
 }

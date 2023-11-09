@@ -31,7 +31,8 @@ public class Customer {
     @Column(name = "password", length = 100, nullable = false)
     public String password;
 
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "customer")
+    @OneToMany(mappedBy = "customer")
+    @JsonIgnore
     public List<Cronograma> cronograma;
 
 }

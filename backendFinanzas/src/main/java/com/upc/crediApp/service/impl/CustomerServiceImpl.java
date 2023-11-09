@@ -1,13 +1,10 @@
 package com.upc.crediApp.service.impl;
 
 import com.upc.crediApp.dto.CustomerDto;
-import com.upc.crediApp.dto.TasaInteresDTO;
 import com.upc.crediApp.exception.ValidationException;
 import com.upc.crediApp.model.Customer;
-import com.upc.crediApp.model.TasaInteres;
 import com.upc.crediApp.repository.CustomerRepository;
 import com.upc.crediApp.service.inter.CustomerService;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -14,4 +14,6 @@ public interface CronogramaService {
     Informacion getInformacionByCronograma(Long id);
     void deleteCronograma(Long id);
     Cronograma saveCronograma(Long customerId,DatosEntradaCronograma variablesCalculo);
+
+    List<Cronograma> getAllCronogramasByCustomerId(Long customerId);
 }

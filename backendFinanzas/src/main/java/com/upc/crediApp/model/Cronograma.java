@@ -21,10 +21,10 @@ public class Cronograma {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     public Long id;
 
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "cronograma")
+    @OneToMany(mappedBy = "cronograma")
     public List<Cuota> cuotas;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
@@ -36,6 +36,4 @@ public class Cronograma {
     @JoinColumn(name = "vehiculo_id", referencedColumnName = "id")
     private Vehiculo vehiculo;
 
-/*    @Column(name = "cuota_final", length = 100, nullable = false)
-    public Cuota cuotaFinal;*/
 }
