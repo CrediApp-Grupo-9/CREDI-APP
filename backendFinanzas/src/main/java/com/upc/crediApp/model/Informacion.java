@@ -65,7 +65,6 @@ public class Informacion {
     @Column(name = "frecuencia_pago", length = 100, nullable = false)
     public String frecuenciaPago;
 
-    @JsonIgnore
     @ManyToMany
     private List<Moneda> monedas;
 

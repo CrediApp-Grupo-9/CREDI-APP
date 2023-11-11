@@ -5,10 +5,7 @@ import com.upc.crediApp.exception.ValidationException;
 import com.upc.crediApp.helpers.Calculadora.CalculadoraCuota;
 import com.upc.crediApp.helpers.Utilidades.Utilidades;
 import com.upc.crediApp.model.*;
-import com.upc.crediApp.repository.CronogramaRepository;
-import com.upc.crediApp.repository.CuotaRepository;
-import com.upc.crediApp.repository.CustomerRepository;
-import com.upc.crediApp.repository.TasaInteresRepository;
+import com.upc.crediApp.repository.*;
 import com.upc.crediApp.service.inter.CronogramaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +31,9 @@ public class CronogramaServiceImpl implements CronogramaService {
     @Autowired
     private CuotaRepository cuotaRepository;
 
+    @Autowired
+    private MonedaRepository monedaRepository;
+
     @Override
     public List<Cronograma> getAllCronogramas() {
         return null;
@@ -54,6 +54,7 @@ public class CronogramaServiceImpl implements CronogramaService {
     public Cronograma saveCronograma(Long customerId, DatosEntradaCronograma datosEntradaCronograma) {
 
         validacionCustomer(customerId);
+        validacionMoneda(datosEntradaCronograma);
 
         validarDatosEntrada(datosEntradaCronograma);
 
@@ -96,7 +97,8 @@ public class CronogramaServiceImpl implements CronogramaService {
     }
     private List<Cuota> calcularListaCuotasSegunPlazo(DatosEntradaCronograma datosEntradaCronograma){
 
-        if(datosEntradaCronograma.getPlazoDeGracia()==null)return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
+        return CalculadoraCuota.obtenerListaCuotas(datosEntradaCronograma);
+/*        if(datosEntradaCronograma.getPlazoDeGracia()==null)return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
 
         switch (datosEntradaCronograma.getPlazoDeGracia().toUpperCase()){
             case "PARCIAL":
@@ -105,7 +107,7 @@ public class CronogramaServiceImpl implements CronogramaService {
                 return CalculadoraCuota.obtenerListaCuotasMetodoConPlazoGraciaTotal(datosEntradaCronograma);
             default:
                 return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
-        }
+        }*/
     }
     private void convertirTodosLosCamposAMayuscula(DatosEntradaCronograma datosEntradaCronograma){
 
@@ -154,6 +156,12 @@ public class CronogramaServiceImpl implements CronogramaService {
             throw new ValidationException("No se ingreso la frecuencia de pago");
         }
 
+        if(datosEntradaCronograma.getTipoMoneda()!=null){
+            datosEntradaCronograma.setTipoMoneda(datosEntradaCronograma.getTipoMoneda().toUpperCase());
+        }else{
+            throw new ValidationException("No se ingreso el tipo de moneda");
+        }
+
     }
     private void validarDatosEntrada(DatosEntradaCronograma datosEntradaCronograma){
 
@@ -181,6 +189,10 @@ public class CronogramaServiceImpl implements CronogramaService {
         //sacar monto a financiar
         double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
 
+        Moneda moneda = monedaRepository.findByNombre(datosEntradaCronograma.getTipoMoneda());
+        List<Moneda> monedas = new ArrayList<>();
+        monedas.add(moneda);
+
         //Creamos un objeto Informacion y lo rellenamos con lo que obtenemos mediante el builder
         Informacion information = Informacion.builder()
                 .numeroAnios(datosEntradaCronograma.numeroAnios)
@@ -205,6 +217,7 @@ public class CronogramaServiceImpl implements CronogramaService {
                 .tipoTasaInteres(datosEntradaCronograma.tipoTasaInteres)
                 .plazoDeGracia(datosEntradaCronograma.plazoDeGracia)
                 .abreviaturaTasaInteres(determinarAbreviaturaTasaInteres(datosEntradaCronograma))
+                .monedas(monedas)
                 .build();
         //Se actualiza el cronograma
         cronograma.setInformacion(information);
@@ -296,6 +309,14 @@ public class CronogramaServiceImpl implements CronogramaService {
     private void validacionCustomer(Long idCustomer){
         if(!customerRepository.existsById(idCustomer)){
             throw new ValidationException("No existe el customer con el id: "+idCustomer);
+        }
+    }
+
+    private void validacionMoneda(DatosEntradaCronograma datosEntradaCronograma){
+
+        String tipoMoneda=datosEntradaCronograma.getTipoMoneda();
+        if(!tipoMoneda.equalsIgnoreCase("SOLES") && !tipoMoneda.equalsIgnoreCase("DOLARES")){
+            throw new ValidationException("No se permite otro tipo que no sean SOLES O DOLARES, No existe la moneda: "+tipoMoneda);
         }
     }
 

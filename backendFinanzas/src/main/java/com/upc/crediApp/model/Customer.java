@@ -28,9 +28,10 @@ public class Customer {
     public String dni;
     @Column(name = "email", length = 100, nullable = false)
     public String email;
+    @Column(name = "username", length = 100, nullable = false)
+    public String username;
     @Column(name = "password", length = 100, nullable = false)
     public String password;
-
     @OneToMany(mappedBy = "customer")
     @JsonIgnore
     public List<Cronograma> cronograma;

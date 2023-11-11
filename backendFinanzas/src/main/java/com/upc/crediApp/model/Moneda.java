@@ -24,6 +24,8 @@ public class Moneda {
     public String nombre;
     @Column(name = "simbolo",length = 100,nullable = false)
     public String simbolo;
+    @Column(name = "abreviatura",length = 100,nullable = false)
+    public String abreviatura;
 
     @JsonIgnore
     @ManyToMany

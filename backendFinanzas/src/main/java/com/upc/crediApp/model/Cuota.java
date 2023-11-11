@@ -22,8 +22,8 @@ public class Cuota {
     public int numeroDeCuota;
     @Column(name = "fecha_de_pago", length = 100, nullable = false)
     public String fechaDePago;
-    @Column(name = "monto_del_prestamo", length = 100, nullable = false)
-    public double montoDelPrestamo;
+    @Column(name = "saldo_inicial", length = 100, nullable = false)
+    public double saldoInicial;
     @Column(name = "amortizacion", length = 100, nullable = false)
     public double amortizacion;
     @Column(name = "interes", length = 100, nullable = false)
@@ -38,8 +38,13 @@ public class Cuota {
     public double costosRegistrales;
     @Column(name = "costos_notariales", length = 100, nullable = false)
     public double costosNotariales;
-    @Column(name = "cuota_total", length = 100, nullable = false)
-    public double cuotaTotal;
+    @Column(name = "cuota", length = 100, nullable = false)
+    public double cuota;
+    @Column(name = "saldo_final", length = 100, nullable = false)
+    public double saldoFinal;
+    @Column(name = "flujo", length = 100, nullable = false)
+    public double flujo;
+
 
 
     @ManyToOne()

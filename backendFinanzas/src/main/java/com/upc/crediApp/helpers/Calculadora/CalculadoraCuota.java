@@ -1,6 +1,8 @@
 package com.upc.crediApp.helpers.Calculadora;
 
 import com.upc.crediApp.dto.DatosEntradaCronograma;
+import com.upc.crediApp.helpers.Clases.ColumnasCronogramaPago;
+import com.upc.crediApp.helpers.Clases.VariablesIntermediasCalculoCronograma;
 import com.upc.crediApp.helpers.Utilidades.Utilidades;
 import com.upc.crediApp.model.Cuota;
 
@@ -9,24 +11,35 @@ import java.util.List;
 
 public class CalculadoraCuota {
 
-    public static double realizarCalculoCuotaMensual(double montoPrestamo, double tasaInteresMensual, double tasaDesgravamenMensual, int tiempoDeFinanciamiento) {
+    public static String SIN_PLAZO_GRACIA="S";
+    public static String PLAZO_GRACIA_TOTAL="T";
+    public static String PLAZO_GRACIA_PARCIAL="P";
 
-        //=+(montoPrestamos*(tasaInteresMensual+tasaDesgravamenMensual))/(1-(1+(tasaInteresMensual+tasaDesgravamenMensual))^-tiempoDeFinanciamiento)
-        double tasaTotalMensual = (tasaInteresMensual / 100) + (tasaDesgravamenMensual / 100);
-        double denominador = 1 - Math.pow((1 + tasaTotalMensual), -tiempoDeFinanciamiento);
-        double cuotaMensual = (montoPrestamo * tasaTotalMensual) / denominador;
+    public static int CUOTA_CERO=0;
 
-        return cuotaMensual;
-    }
+    public static double realizarCalculoCuotaSegunFrecuenciaPago(double saldo, double tasaInteres, double tasaDesgravamen, int tiempoDeFinanciamiento,int tiempoCuotaActual,String estadoPlazoGracia) {
 
-    public static double realizarCalculoCuotaMensualPlazoGraciaParcial(double montoPrestamo, double tasaInteresMensual, double tasaDesgravamenMensual, int tiempoDeFinanciamiento, int tiempoCuotaActual) {
+        //Hay 4 casos
+        //Caso de calculo sin plazo de gracia
+        //Caso de calculo de la cuota con plazo de gracia parcial
+        //Caso de calculo de la cuota con plazo de gracia total
+        //Caso de que se tiene que calcular la cuota cuando ya se ha sido afectado por algun plazo de gracia (total o parcial)
 
-        //=+(montoPrestamos*(tasaInteresMensual+tasaDesgravamenMensual))/(1-(1+(tasaInteresMensual+tasaDesgravamenMensual))^-tiempoDeFinanciamiento)
-        double tasaTotalMensual = (tasaInteresMensual / 100) + (tasaDesgravamenMensual / 100);
-        double denominador = 1 - Math.pow((1 + tasaTotalMensual), -(tiempoDeFinanciamiento-tiempoCuotaActual));
-        double cuotaMensual = (montoPrestamo * tasaTotalMensual) / denominador;
+        if(estadoPlazoGracia.equalsIgnoreCase(SIN_PLAZO_GRACIA)){
+            //SI ES SIN PLAZO DE GRACIA
+            //=+(montoPrestamos*(tasaInteres+tasaDesgravamen))/(1-(1+(tasaInteres+tasaDesgravamen))^-tiempoDeFinanciamiento)
+            double tasaTotalSegunFrecuenciaPago = (tasaInteres / 100) + (tasaDesgravamen / 100);
+            double denominador = 1 - Math.pow((1 + tasaTotalSegunFrecuenciaPago), -(tiempoDeFinanciamiento-(tiempoCuotaActual-1)));
+            return (saldo * tasaTotalSegunFrecuenciaPago) / denominador;
 
-        return cuotaMensual;
+        } else if (estadoPlazoGracia.equalsIgnoreCase(PLAZO_GRACIA_PARCIAL)) {
+            return calculoInteres(saldo,tasaInteres)+CalculadoraSeguroDesgravamen.calcularSeguroDesgravamenConPrestamo(saldo,tasaDesgravamen);
+        } else{
+            //SI ES CON PLAZO DE GRACIA TOTAL
+            return 0.0;
+        }
+
+
     }
 
     public static double calcularNumeroCuotasTotales(int tiempoAnios, String frecuenciaPago) {
@@ -69,85 +82,60 @@ public class CalculadoraCuota {
         return tiempoAnios * pagosPorAnio;
     }
 
+    public static double calculoInteres(double saldoInicial, double tasaEfectivaSegunFrecuenciaPago) {
+        return saldoInicial * (tasaEfectivaSegunFrecuenciaPago / 100);
+    }
 
-    public static List<Cuota> obtenerListaCuotasMetodoSinPlazoGracia(DatosEntradaCronograma datosEntradaCronograma){
+    public static String determinarEstadoPlazoGracia( DatosEntradaCronograma datosEntradaCronograma){
+        String ESTADO_PLAZO_GRACIA;
 
-        //Variables Intermedias:
-        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
-
-        String fechaInicio = datosEntradaCronograma.getFechaInicio();
-
-        //sacar tasa efectiva de acuerdo a la frecuencia de pago
-        double tasaEfectiva;
-        //Si la tasa es efectiva, solo se pasa a la frecuencia de pago
-        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
-
-            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
+        if(datosEntradaCronograma.getPlazoDeGracia()==null){
+            ESTADO_PLAZO_GRACIA=SIN_PLAZO_GRACIA;
         }else{
-            //Si no es efectiva (osea es nominal), se convierte a efectiva
-            //La tasa efectiva nominal debe ser pasada a una tasa efectiva de acuerdo a la frecuencia de pago
-            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
+            if(datosEntradaCronograma.getPlazoDeGracia().equalsIgnoreCase("TOTAL")){
+                ESTADO_PLAZO_GRACIA=PLAZO_GRACIA_TOTAL;
+            }else{
+                ESTADO_PLAZO_GRACIA=PLAZO_GRACIA_PARCIAL;
+            }
         }
 
+        return ESTADO_PLAZO_GRACIA;
+    }
 
-        //sacar tasa seguro desgravamen de acuerdo a la frecuencia de pago
-        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
+    public static double calcularSaldoFinal(ColumnasCronogramaPago columnasCronogramaPago, String ESTADO_PLAZO_GRACIA){
 
-        //sacar valor del seguro vehicular de acuerdo a la frecuencia de pago
-        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular());
+        if(ESTADO_PLAZO_GRACIA.equalsIgnoreCase(PLAZO_GRACIA_TOTAL)){
+            return columnasCronogramaPago.saldoInicial+columnasCronogramaPago.interes;
+        }else if(ESTADO_PLAZO_GRACIA.equalsIgnoreCase(PLAZO_GRACIA_PARCIAL)){
+            return columnasCronogramaPago.saldoInicial;
+        }else{
+            //SIN PLAZO DE GRACIA
+            return columnasCronogramaPago.saldoInicial-columnasCronogramaPago.amortizacion;
+        }
+    }
 
-        //sacar monto a financiar
-        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
+    public static List<Cuota> obtenerListaCuotas(DatosEntradaCronograma datosEntradaCronograma) {
 
-        //sacar cuota inicial
-        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial());
+        //Instanciar variables que vamos a tener si o si
+        VariablesIntermediasCalculoCronograma variablesIntermediasCalculoCronograma = instanciarVariablesIntermedias(datosEntradaCronograma);
+        ColumnasCronogramaPago columnasCronogramaPago = instanciarColumnasCronogramaPago(datosEntradaCronograma, variablesIntermediasCalculoCronograma);
 
-        //sacar cuota final
-        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()) ;
+        String ESTADO_PLAZO_GRACIA = determinarEstadoPlazoGracia(datosEntradaCronograma);
 
-        //calculamos cuotas totales
-        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
+        double numeroCuotasParciales= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaParcial;
 
-        double montoPrestamo= montoAFinanciar;
-        double amortizacion=0;
-        double interes=0;
-        double cuota= CalculadoraCuota.realizarCalculoCuotaMensual(montoPrestamo,tasaEfectiva,tasaDesgravamen, (int) numeroCuotas);
-        double valorSeguroDesgravamen=0;
-
-        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), seguroVehicular), 2);
-
-        double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales(),2);
 
         //Instanciamos lista de cuotas
         List<Cuota> listaCuotas = new ArrayList<>();
 
         //Cuotas del prestamo
-        for(int cuotaActual=0;cuotaActual<=numeroCuotas;cuotaActual++){
+        for(int cuotaActual=0;cuotaActual<=variablesIntermediasCalculoCronograma.numeroCuotas;cuotaActual++){
 
             Cuota cuotaNueva = new Cuota();
 
-            if(cuotaActual!=0){
-                interes= Utilidades.redondear(montoPrestamo*(tasaEfectiva/100),2);
-                valorSeguroDesgravamen=Utilidades.redondear(CalculadoraSeguroDesgravamen.calcularSeguroDesgravamenConPrestamo(montoPrestamo,tasaDesgravamen),2);
-                amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular- datosEntradaCronograma.getPortes()- datosEntradaCronograma.getCostosRegistrales()- datosEntradaCronograma.getCostosNotariales(),2);
-                montoPrestamo= Utilidades.redondear(montoPrestamo-amortizacion,2);
-                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual, datosEntradaCronograma.getFrecuenciaPago());
-
-                cuotaNueva.setMontoDelPrestamo(montoPrestamo);
-                cuotaNueva.setNumeroDeCuota(cuotaActual);
-                cuotaNueva.setAmortizacion(amortizacion);
-                cuotaNueva.setInteres(interes);
-                cuotaNueva.setSeguroDesgravamen(valorSeguroDesgravamen);
-                cuotaNueva.setSeguroVehicular(valorSeguroVehicular);
-                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
-                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-                cuotaNueva.setCuotaTotal(cuotaTotal);
-                cuotaNueva.setFechaDePago(fechaPago);
-
-            }else{
-                cuotaNueva.setNumeroDeCuota(cuotaActual);
-                cuotaNueva.setMontoDelPrestamo(montoPrestamo);
+            if(cuotaActual==CUOTA_CERO){
+                cuotaNueva.setSaldoInicial(columnasCronogramaPago.saldoInicial);
+                cuotaNueva.setNumeroDeCuota(0);
                 cuotaNueva.setAmortizacion(0);
                 cuotaNueva.setInteres(0);
                 cuotaNueva.setSeguroDesgravamen(0);
@@ -155,184 +143,139 @@ public class CalculadoraCuota {
                 cuotaNueva.setPortes(0);
                 cuotaNueva.setCostosRegistrales(0);
                 cuotaNueva.setCostosNotariales(0);
-                cuotaNueva.setCuotaTotal(0);
-                cuotaNueva.setFechaDePago(fechaInicio);
+                cuotaNueva.setCuota(0);
+                cuotaNueva.setFechaDePago(datosEntradaCronograma.getFechaInicio());
+                cuotaNueva.setSaldoFinal(columnasCronogramaPago.saldoInicial);
+                cuotaNueva.setFlujo(columnasCronogramaPago.saldoInicial);
+            }else{
+
+                if(cuotaActual>numeroCuotasParciales) {
+                    ESTADO_PLAZO_GRACIA = SIN_PLAZO_GRACIA;
+                }
+
+
+                columnasCronogramaPago.numeroCuota= cuotaActual;
+                columnasCronogramaPago.interes= Utilidades.redondear(columnasCronogramaPago.saldoInicial*(variablesIntermediasCalculoCronograma.tasaEfectiva/100),2);
+                columnasCronogramaPago.seguroDesgravamen=Utilidades.redondear(CalculadoraSeguroDesgravamen.calcularSeguroDesgravamenConPrestamo(columnasCronogramaPago.saldoInicial,variablesIntermediasCalculoCronograma.tasaDesgravamen),2);
+                columnasCronogramaPago.cuota= Utilidades.redondear(
+                        realizarCalculoCuotaSegunFrecuenciaPago(
+                                columnasCronogramaPago.saldoInicial,
+                                variablesIntermediasCalculoCronograma.tasaEfectiva,
+                                variablesIntermediasCalculoCronograma.tasaDesgravamen,
+                                variablesIntermediasCalculoCronograma.numeroCuotas,
+                                cuotaActual,
+                                ESTADO_PLAZO_GRACIA)
+                        ,2);
+
+                if(ESTADO_PLAZO_GRACIA.equalsIgnoreCase(PLAZO_GRACIA_TOTAL)){
+                    columnasCronogramaPago.amortizacion=0;
+                }else{
+                    columnasCronogramaPago.amortizacion= Utilidades.redondear(columnasCronogramaPago.cuota-columnasCronogramaPago.interes-columnasCronogramaPago.seguroDesgravamen,2);
+                }
+
+                //en el saldo Final hay distintos casos, si es con plazo de gracia o sin plazo de gracia
+                columnasCronogramaPago.saldoFinal= Utilidades.redondear(
+                        calcularSaldoFinal(
+                                columnasCronogramaPago,
+                                ESTADO_PLAZO_GRACIA),
+                        2);
+
+
+                columnasCronogramaPago.flujo= Utilidades.redondear(columnasCronogramaPago.cuota+columnasCronogramaPago.seguroVehicular+columnasCronogramaPago.portes+columnasCronogramaPago.costosNotariales+columnasCronogramaPago.costosRegistrales,2);
+                columnasCronogramaPago.fechaVencimiento= CalculadoraFechas.calcularFechaDePago(datosEntradaCronograma.fechaInicio,cuotaActual, datosEntradaCronograma.frecuenciaPago);
+
+
+                //Guardamos el saldo inicial y Actualizamos el valor del saldo inicial para la siguiente cuota
+                cuotaNueva.setSaldoInicial(Utilidades.redondear(columnasCronogramaPago.saldoInicial,2));
+                columnasCronogramaPago.saldoInicial=columnasCronogramaPago.saldoFinal;
+                cuotaNueva.setNumeroDeCuota(cuotaActual);
+                cuotaNueva.setAmortizacion(columnasCronogramaPago.amortizacion);
+                cuotaNueva.setInteres(columnasCronogramaPago.interes);
+                cuotaNueva.setSeguroDesgravamen(columnasCronogramaPago.seguroDesgravamen);
+                cuotaNueva.setSeguroVehicular(columnasCronogramaPago.seguroVehicular);
+                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
+                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
+                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
+                cuotaNueva.setCuota(columnasCronogramaPago.cuota);
+                cuotaNueva.setFechaDePago(columnasCronogramaPago.fechaVencimiento);
+                cuotaNueva.setSaldoFinal(columnasCronogramaPago.saldoFinal);
+                cuotaNueva.setFlujo(columnasCronogramaPago.flujo);
             }
 
             listaCuotas.add(cuotaNueva);
-
         }
 
-        //Ultima cuota
-        amortizacion=0;
-        interes=cuotaFinal*(tasaEfectiva/100);
-        valorSeguroDesgravamen=cuotaFinal*(tasaDesgravamen/100);
-        montoPrestamo=0;
 
-        Cuota ultimaCuota = new Cuota();
-
-        ultimaCuota.setNumeroDeCuota((int) numeroCuotas+1);
-        ultimaCuota.setMontoDelPrestamo(cuotaFinal);
-        ultimaCuota.setAmortizacion(amortizacion);
-        ultimaCuota.setInteres(interes);
-        ultimaCuota.setSeguroDesgravamen(valorSeguroDesgravamen);
-        ultimaCuota.setSeguroVehicular(valorSeguroVehicular);
-        ultimaCuota.setPortes(datosEntradaCronograma.getPortes());
-        ultimaCuota.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-        ultimaCuota.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales());
-        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, datosEntradaCronograma.getFrecuenciaPago()));
-
-        listaCuotas.add(ultimaCuota);
+        //Añadimos la ultima cuota
+        listaCuotas.add(calculoUltimaCuota(datosEntradaCronograma,variablesIntermediasCalculoCronograma, columnasCronogramaPago));
 
         return listaCuotas;
     }
 
-    public static List<Cuota> obtenerListaCuotasMetodoConPlazoGraciaParcial(DatosEntradaCronograma datosEntradaCronograma){
-        //Variables Intermedias:
-        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
-
-        String fechaInicio = datosEntradaCronograma.getFechaInicio();
-
-        //sacar tasa efectiva de acuerdo a la frecuencia de pago
-        double tasaEfectiva;
-        //Si la tasa es efectiva, solo se pasa a la frecuencia de pago
-        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
-
-            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
-        }else{
-            //Si no es efectiva (osea es nominal), se convierte a efectiva
-            //La tasa efectiva nominal debe ser pasada a una tasa efectiva de acuerdo a la frecuencia de pago
-            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
-        }
-
-
-
-        //sacar tasa seguro desgravamen de acuerdo a la frecuencia de pago
-        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
-
-        //sacar valor del seguro vehicular de acuerdo a la frecuencia de pago
-        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular());
-
-        //sacar monto a financiar
-        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
-
-        //sacar cuota inicial
-        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial());
-
-        //sacar cuota final
-        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()) ;
-
-        //calculamos cuotas totales
-        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
-        //Calculamos cuotas de plazo de gracia
-        double numeroCuotasParciales= (double) datosEntradaCronograma.getTiempoPlazoDeGracia();
-
-        double montoPrestamo= montoAFinanciar;
-        double amortizacion=0;
-        double interes=0;
-        double cuota= 0;
-        double valorSeguroDesgravamen=0;
-
-        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), seguroVehicular), 2);
-
-        //double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
-        double cuotaTotal=0;
-        //Instanciamos lista de cuotas
-        List<Cuota> listaCuotas = new ArrayList<>();
-
-        //Cuotas del prestamo
-        for(int cuotaActual=0;cuotaActual<=numeroCuotas;cuotaActual++){
-
-            Cuota cuotaNueva = new Cuota();
-
-            if(cuotaActual!=0){
-
-                interes= Utilidades.redondear(montoPrestamo*(tasaEfectiva/100),2);
-                valorSeguroDesgravamen=Utilidades.redondear(CalculadoraSeguroDesgravamen.calcularSeguroDesgravamenConPrestamo(montoPrestamo,tasaDesgravamen),2);
-
-                if(cuotaActual<=numeroCuotasParciales){
-                    amortizacion=0;
-                    //La cuota total en el caso de plazo de gracia parcial la cuota es igual a los intereses, sin embargo sumando el seguro desgravamen y los costos periodicos...
-                    cuotaTotal=interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales();
-                }else{
-                    cuota= CalculadoraCuota.realizarCalculoCuotaMensualPlazoGraciaParcial(montoPrestamo,tasaEfectiva,tasaDesgravamen, (int) numeroCuotas,cuotaActual-1);
-                    cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales(),2);
-                    amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular- datosEntradaCronograma.getPortes()- datosEntradaCronograma.getCostosRegistrales()- datosEntradaCronograma.getCostosNotariales(),2);
-                }
-
-                montoPrestamo= Utilidades.redondear(montoPrestamo-amortizacion,2);
-
-                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual, datosEntradaCronograma.getFrecuenciaPago());
-
-                cuotaNueva.setMontoDelPrestamo(montoPrestamo);
-                cuotaNueva.setNumeroDeCuota(cuotaActual);
-                cuotaNueva.setAmortizacion(amortizacion);
-                cuotaNueva.setInteres(interes);
-                cuotaNueva.setSeguroDesgravamen(valorSeguroDesgravamen);
-                cuotaNueva.setSeguroVehicular(valorSeguroVehicular);
-                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
-                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-                cuotaNueva.setCuotaTotal(cuotaTotal);
-                cuotaNueva.setFechaDePago(fechaPago);
-
-            }else{
-                cuotaNueva.setNumeroDeCuota(cuotaActual);
-                cuotaNueva.setMontoDelPrestamo(montoPrestamo);
-                cuotaNueva.setAmortizacion(0);
-                cuotaNueva.setInteres(0);
-                cuotaNueva.setSeguroDesgravamen(0);
-                cuotaNueva.setSeguroVehicular(0);
-                cuotaNueva.setPortes(0);
-                cuotaNueva.setCostosRegistrales(0);
-                cuotaNueva.setCostosNotariales(0);
-                cuotaNueva.setCuotaTotal(0);
-                cuotaNueva.setFechaDePago(fechaInicio);
-            }
-
-            listaCuotas.add(cuotaNueva);
-
-        }
-
-        //Ultima cuota
-        amortizacion=0;
-        interes=cuotaFinal*(tasaEfectiva/100);
-        valorSeguroDesgravamen=cuotaFinal*(tasaDesgravamen/100);
-        montoPrestamo=0;
+    public static Cuota calculoUltimaCuota(DatosEntradaCronograma datosEntradaCronograma,VariablesIntermediasCalculoCronograma variablesIntermediasCalculoCronograma, ColumnasCronogramaPago columnasCronogramaPago) {
+        double amortizacion = 0;
+        double interes = variablesIntermediasCalculoCronograma.cuotaFinal * (variablesIntermediasCalculoCronograma.tasaEfectiva / 100);
+        double valorSeguroDesgravamen = variablesIntermediasCalculoCronograma.cuotaFinal * (variablesIntermediasCalculoCronograma.tasaDesgravamen / 100);
 
         Cuota ultimaCuota = new Cuota();
+        ultimaCuota.setNumeroDeCuota((int) variablesIntermediasCalculoCronograma.numeroCuotas + 1);
+        ultimaCuota.setSaldoInicial(Utilidades.redondear(variablesIntermediasCalculoCronograma.cuotaFinal,2));
+        ultimaCuota.setAmortizacion(Utilidades.redondear(amortizacion,2));
+        ultimaCuota.setInteres(Utilidades.redondear(interes,2));
+        ultimaCuota.setSeguroDesgravamen(Utilidades.redondear(valorSeguroDesgravamen,2));
+        ultimaCuota.setSeguroVehicular(Utilidades.redondear(columnasCronogramaPago.seguroVehicular,2));
+        ultimaCuota.setPortes(columnasCronogramaPago.portes);
+        ultimaCuota.setCostosRegistrales(columnasCronogramaPago.costosRegistrales);
+        ultimaCuota.setCostosNotariales(columnasCronogramaPago.costosNotariales);
+        ultimaCuota.setCuota(Utilidades.redondear(variablesIntermediasCalculoCronograma.cuotaFinal + amortizacion + interes + valorSeguroDesgravamen,2));
+        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(variablesIntermediasCalculoCronograma.fechaInicio, (int) variablesIntermediasCalculoCronograma.numeroCuotas + 1, datosEntradaCronograma.frecuenciaPago));
+        ultimaCuota.setSaldoFinal(0);
+        ultimaCuota.setFlujo(
+                Utilidades.redondear(
+                        variablesIntermediasCalculoCronograma.cuotaFinal +
+                        columnasCronogramaPago.seguroVehicular +
+                        columnasCronogramaPago.portes +
+                        columnasCronogramaPago.costosRegistrales +
+                        columnasCronogramaPago.costosNotariales,2)
 
-        ultimaCuota.setNumeroDeCuota((int) numeroCuotas+1);
-        ultimaCuota.setMontoDelPrestamo(cuotaFinal);
-        ultimaCuota.setAmortizacion(amortizacion);
-        ultimaCuota.setInteres(interes);
-        ultimaCuota.setSeguroDesgravamen(valorSeguroDesgravamen);
-        ultimaCuota.setSeguroVehicular(valorSeguroVehicular);
-        ultimaCuota.setPortes(datosEntradaCronograma.getPortes());
-        ultimaCuota.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-        ultimaCuota.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales());
-        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, datosEntradaCronograma.getFrecuenciaPago()));
+        );
 
-        listaCuotas.add(ultimaCuota);
-
-        return listaCuotas;
+        return ultimaCuota;
     }
 
-    public static List<Cuota> obtenerListaCuotasMetodoConPlazoGraciaTotal(DatosEntradaCronograma datosEntradaCronograma){
+    public static ColumnasCronogramaPago instanciarColumnasCronogramaPago(DatosEntradaCronograma datosEntradaCronograma, VariablesIntermediasCalculoCronograma variablesIntermediasCalculoCronograma){
 
-        //Variables Intermedias:
-        double porcentajePrestamoAFinanciar= Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal());
+        double saldoInicial= variablesIntermediasCalculoCronograma.montoAFinanciar;
+        double amortizacion=0;
+        double interes=0;
+        double valorSeguroDesgravamen=0;
+        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), variablesIntermediasCalculoCronograma.tasaSeguroVehicular), 2);
+        double saldoFinal= Utilidades.redondear(saldoInicial-amortizacion,2);
 
-        String fechaInicio = datosEntradaCronograma.getFechaInicio();
+        ColumnasCronogramaPago columnasCronogramaPago = ColumnasCronogramaPago.builder()
+                .numeroCuota(0)
+                .fechaVencimiento(datosEntradaCronograma.getFechaInicio())
+                .saldoInicial(Utilidades.redondear(saldoInicial,2))
+                .interes(interes)
+                .cuota(0)
+                .amortizacion(amortizacion)
+                .seguroDesgravamen(valorSeguroDesgravamen)
+                .seguroVehicular(valorSeguroVehicular)
+                .portes(datosEntradaCronograma.getPortes())
+                .costosNotariales(datosEntradaCronograma.getCostosNotariales())
+                .costosRegistrales(datosEntradaCronograma.getCostosRegistrales())
+                .saldoFinal(Utilidades.redondear(saldoFinal,2))
+                .flujo(Utilidades.redondear(saldoFinal,2))
+                .build();
 
+        return columnasCronogramaPago;
+    }
 
-        //sacar tasa efectiva de acuerdo a la frecuencia de pago
+    public static VariablesIntermediasCalculoCronograma instanciarVariablesIntermedias(DatosEntradaCronograma datosEntradaCronograma){
+
         double tasaEfectiva;
-        //Si la tasa es efectiva, solo se pasa a la frecuencia de pago
-        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
 
+        if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
             tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
         }else{
             //Si no es efectiva (osea es nominal), se convierte a efectiva
@@ -340,118 +283,22 @@ public class CalculadoraCuota {
             tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
         }
 
-        //sacar tasa seguro desgravamen de acuerdo a la frecuencia de pago
-        double tasaDesgravamen = CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen());
+        VariablesIntermediasCalculoCronograma variablesIntermediasCalculoCronograma =
+                VariablesIntermediasCalculoCronograma.builder()
+                        .porcentajePrestamoAFinanciar(Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal()))
+                        .fechaInicio(datosEntradaCronograma.getFechaInicio())
+                        .tasaEfectiva(tasaEfectiva)
+                        .tasaDesgravamen(CalculadoraSeguroDesgravamen.calcularTasaSeguroConFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroDesgravamen(), datosEntradaCronograma.getPorcentajeSeguroDesgravamen()))
+                        .tasaSeguroVehicular(CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular()))
+                        .montoAFinanciar(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),Utilidades.calcularPorcentajePrestamoAFinanciar(datosEntradaCronograma.getPorcentajeCuotaInicial(), datosEntradaCronograma.getPorcentajeCuotaFinal())))
+                        .cuotaInicial(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial()))
+                        .cuotaFinal(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()))
+                        .numeroCuotas((int) CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago()))
+                        .numeroCuotasPlazoGraciaParcial(datosEntradaCronograma.getTiempoPlazoDeGracia())
+                        .numeroCuotasPlazoGraciaTotal(datosEntradaCronograma.getTiempoPlazoDeGracia())
+                        .build();
 
-        //sacar valor del seguro vehicular de acuerdo a la frecuencia de pago
-        double seguroVehicular = CalculadoraSeguroVehicular.calcularTasaSeguroVehicularDadoFrecuenciaPago(datosEntradaCronograma.getFrecuenciaPago(), datosEntradaCronograma.getTiempoSeguroVehicular(), datosEntradaCronograma.getPorcentajeSeguroVehicular());
-
-        //sacar monto a financiar
-        double montoAFinanciar= Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),porcentajePrestamoAFinanciar);
-
-        //sacar cuota inicial
-        double cuotaInicial = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial());
-
-        //sacar cuota final
-        double cuotaFinal = Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()) ;
-
-        //calculamos cuotas totales
-        double numeroCuotas= CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago());
-        //Calculamos cuotas de plazo de gracia
-        double numeroCuotasPlazoTotal= (double) datosEntradaCronograma.getTiempoPlazoDeGracia();
-
-        double montoPrestamo= montoAFinanciar;
-        double amortizacion=0;
-        double interes=0;
-        double cuota= 0;
-        double valorSeguroDesgravamen=0;
-
-        double valorSeguroVehicular= Utilidades.redondear(CalculadoraSeguroVehicular.calculoSeguroVehicularDelVehiculo(datosEntradaCronograma.getPrecioVehiculo(), seguroVehicular), 2);
-
-        //double cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+calculoCronogramaDTO.getPortes()+calculoCronogramaDTO.getCostosRegistrales()+calculoCronogramaDTO.getCostosNotariales(),2);
-        double cuotaTotal=0;
-        //Instanciamos lista de cuotas
-        List<Cuota> listaCuotas = new ArrayList<>();
-
-        //Cuotas del prestamo
-        for(int cuotaActual=0;cuotaActual<=numeroCuotas;cuotaActual++){
-
-            Cuota cuotaNueva = new Cuota();
-
-            if(cuotaActual!=0){
-
-                interes= Utilidades.redondear(montoPrestamo*(tasaEfectiva/100),2);
-                valorSeguroDesgravamen=Utilidades.redondear(CalculadoraSeguroDesgravamen.calcularSeguroDesgravamenConPrestamo(montoPrestamo,tasaDesgravamen),2);
-
-                if(cuotaActual<=numeroCuotasPlazoTotal){
-                    amortizacion=0;
-                    montoPrestamo += interes;
-                    //La cuota total en el caso de plazo de gracia total debe ser 0 porque no se paga nada , sin embargo si se tiene en cuenta los costos periodicos...
-                    cuotaTotal=valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales();
-                }else{
-                    cuota= CalculadoraCuota.realizarCalculoCuotaMensualPlazoGraciaParcial(montoPrestamo,tasaEfectiva,tasaDesgravamen, (int) numeroCuotas,cuotaActual-1);
-                    cuotaTotal=Utilidades.redondear(cuota+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales(),2);
-                    amortizacion= Utilidades.redondear(cuotaTotal-interes-valorSeguroDesgravamen-valorSeguroVehicular- datosEntradaCronograma.getPortes()- datosEntradaCronograma.getCostosRegistrales()- datosEntradaCronograma.getCostosNotariales(),2);
-                }
-
-                montoPrestamo= Utilidades.redondear(montoPrestamo-amortizacion,2);
-
-                String fechaPago= CalculadoraFechas.calcularFechaDePago(fechaInicio,cuotaActual, datosEntradaCronograma.getFrecuenciaPago());
-
-                cuotaNueva.setMontoDelPrestamo(montoPrestamo);
-                cuotaNueva.setNumeroDeCuota(cuotaActual);
-                cuotaNueva.setAmortizacion(amortizacion);
-                cuotaNueva.setInteres(interes);
-                cuotaNueva.setSeguroDesgravamen(valorSeguroDesgravamen);
-                cuotaNueva.setSeguroVehicular(valorSeguroVehicular);
-                cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
-                cuotaNueva.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-                cuotaNueva.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-                cuotaNueva.setCuotaTotal(cuotaTotal);
-                cuotaNueva.setFechaDePago(fechaPago);
-
-
-            }else{
-                cuotaNueva.setNumeroDeCuota(cuotaActual);
-                cuotaNueva.setMontoDelPrestamo(montoPrestamo);
-                cuotaNueva.setAmortizacion(0);
-                cuotaNueva.setInteres(0);
-                cuotaNueva.setSeguroDesgravamen(0);
-                cuotaNueva.setSeguroVehicular(0);
-                cuotaNueva.setPortes(0);
-                cuotaNueva.setCostosRegistrales(0);
-                cuotaNueva.setCostosNotariales(0);
-                cuotaNueva.setCuotaTotal(0);
-                cuotaNueva.setFechaDePago(fechaInicio);
-            }
-
-            listaCuotas.add(cuotaNueva);
-
-        }
-
-        //Ultima cuota
-        amortizacion=0;
-        interes=cuotaFinal*(tasaEfectiva/100);
-        valorSeguroDesgravamen=cuotaFinal*(tasaDesgravamen/100);
-        montoPrestamo=0;
-
-        Cuota ultimaCuota = new Cuota();
-
-        ultimaCuota.setNumeroDeCuota((int) numeroCuotas+1);
-        ultimaCuota.setMontoDelPrestamo(cuotaFinal);
-        ultimaCuota.setAmortizacion(amortizacion);
-        ultimaCuota.setInteres(interes);
-        ultimaCuota.setSeguroDesgravamen(valorSeguroDesgravamen);
-        ultimaCuota.setSeguroVehicular(valorSeguroVehicular);
-        ultimaCuota.setPortes(datosEntradaCronograma.getPortes());
-        ultimaCuota.setCostosRegistrales(datosEntradaCronograma.getCostosRegistrales());
-        ultimaCuota.setCostosNotariales(datosEntradaCronograma.getCostosNotariales());
-        ultimaCuota.setCuotaTotal(cuotaFinal+amortizacion+interes+valorSeguroDesgravamen+valorSeguroVehicular+ datosEntradaCronograma.getPortes()+ datosEntradaCronograma.getCostosRegistrales()+ datosEntradaCronograma.getCostosNotariales());
-        ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(fechaInicio,(int) numeroCuotas+1, datosEntradaCronograma.getFrecuenciaPago()));
-
-        listaCuotas.add(ultimaCuota);
-
-        return listaCuotas;
+        return variablesIntermediasCalculoCronograma;
     }
 
 }

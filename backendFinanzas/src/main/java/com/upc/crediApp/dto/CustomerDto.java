@@ -11,5 +11,5 @@ public class CustomerDto {
     public String dni;
     public String email;
     public String password;
-
+    public String username;
 }

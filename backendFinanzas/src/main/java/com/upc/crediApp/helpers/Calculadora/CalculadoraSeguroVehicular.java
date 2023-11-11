@@ -29,9 +29,9 @@ public class CalculadoraSeguroVehicular{
         double diasPlazoSeguroVehicular = CalculadoraPlazoEnDias.devolverPlazoEnDias(tiempoSeguroVehicular);
         double diasFrecuenciaPago = CalculadoraPlazoEnDias.devolverPlazoEnDias(frecuenciaPago);
 
-        if(tiempoSeguroVehicular.equalsIgnoreCase("ANUAL")) {
+/*        if(tiempoSeguroVehicular.equalsIgnoreCase("ANUAL")) {
             diasPlazoSeguroVehicular = diasPlazoSeguroVehicular + 5; //que pasa si no sumamos nada (estaba en 5)
-        }
+        }*/
 
         return Utilidades.porcentajeDecimalEnFormaPorcentaje(((porcentajeConvertido*diasFrecuenciaPago)/diasPlazoSeguroVehicular)); //estaba en 31
     }

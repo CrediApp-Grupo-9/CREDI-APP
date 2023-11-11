@@ -90,6 +90,13 @@ public class CustomerServiceImpl implements CustomerService {
         if(customerDto.getDni() == null || customerDto.getDni().isEmpty()){
             throw new ValidationException("El dni no puede ser nulo o vacio");
         }
+        if(customerDto.getUsername() == null || customerDto.getUsername().isEmpty()){
+            throw new ValidationException("El username no puede ser nulo o vacio");
+        }
+
+        if(customerRepository.existsByUsername(customerDto.getUsername())){
+            throw new ValidationException("El username "+customerDto.getUsername()+" ya existe");
+        }
 
     }
 

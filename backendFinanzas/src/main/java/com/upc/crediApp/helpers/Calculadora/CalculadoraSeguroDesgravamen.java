@@ -10,7 +10,7 @@ public class CalculadoraSeguroDesgravamen{
     public static double calcularTasaSeguroMensual(String tiempo, double porcentaje){
 
         String tiempoMayuscula = tiempo.toUpperCase();
-        double nuevoPorcentaje = 0;
+        double nuevoPorcentaje=porcentaje;
 
         switch (tiempoMayuscula) {
             case "ANUAL":
@@ -22,10 +22,13 @@ public class CalculadoraSeguroDesgravamen{
             case "TRIMESTRAL":
                 nuevoPorcentaje = porcentaje / 3;
                 break;
+                case "BIMESTRAL":
+                nuevoPorcentaje = porcentaje / 2;
+                break;
             case "MENSUAL":
                 break;
             case "QUINCENAL":
-                nuevoPorcentaje = porcentaje;
+                nuevoPorcentaje = porcentaje * 2;
                 break;
             case "SEMANAL":
                 nuevoPorcentaje = porcentaje * 4;

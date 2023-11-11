@@ -11,6 +11,10 @@ public class DatosEntradaCronograma {
     public double precioVehiculo;
     public String marcaVehiculo;
     public String modeloVehiculo;
+
+    //Informacion correspondiente a la moneda
+    public String tipoMoneda;
+
     //Informacion correspondiente al cronograma
     public int numeroAnios;
     public double porcentajeCuotaInicial;
