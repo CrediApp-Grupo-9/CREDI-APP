@@ -3,6 +3,8 @@ package com.upc.crediApp.service.impl;
 import com.upc.crediApp.dto.DatosEntradaCronograma;
 import com.upc.crediApp.exception.ValidationException;
 import com.upc.crediApp.helpers.Calculadora.CalculadoraCuota;
+import com.upc.crediApp.helpers.Calculadora.CalculadoraTIR;
+import com.upc.crediApp.helpers.Calculadora.CalculadoraVAN;
 import com.upc.crediApp.helpers.Utilidades.Utilidades;
 import com.upc.crediApp.model.*;
 import com.upc.crediApp.repository.*;
@@ -62,11 +64,13 @@ public class CronogramaServiceImpl implements CronogramaService {
 
         Cronograma nuevoCronograma= Cronograma.builder().build();
 
+        List<Cuota> listaCuotas= calcularListaCuotasSegunPlazo(datosEntradaCronograma);
 
-        rellenarCuotas(calcularListaCuotasSegunPlazo(datosEntradaCronograma),nuevoCronograma);
+        rellenarCuotas(listaCuotas,nuevoCronograma);
         rellenarInformacion(datosEntradaCronograma,nuevoCronograma);
         rellenarVehiculo(datosEntradaCronograma,nuevoCronograma);
         rellenarCustomer(customerId,nuevoCronograma);
+        rellenarIndicadores(listaCuotas,nuevoCronograma);
 
         //Primero se guarda el cronograma y luego se guardan las cuotas del cronograma
         cronogramaRepository.save(nuevoCronograma)
@@ -217,6 +221,7 @@ public class CronogramaServiceImpl implements CronogramaService {
                 .tipoTasaInteres(datosEntradaCronograma.tipoTasaInteres)
                 .plazoDeGracia(datosEntradaCronograma.plazoDeGracia)
                 .abreviaturaTasaInteres(determinarAbreviaturaTasaInteres(datosEntradaCronograma))
+                .cokAnual(datosEntradaCronograma.cokAnual)
                 .monedas(monedas)
                 .build();
         //Se actualiza el cronograma
@@ -244,6 +249,49 @@ public class CronogramaServiceImpl implements CronogramaService {
             //Se actualiza el customer
             //customerRepository.save(customer);
         });
+    }
+
+    public void rellenarIndicadores(List<Cuota> listaCuotas,Cronograma cronograma){
+
+        double VAN=0;
+        double TIR=0;
+        double prestamo=0;
+        List<Double> flujoCaja = new ArrayList<>();
+        //Calculo de la VAN
+        // Si el numero de cuota es 0 entonces se toma el valor del primer flujo como prestamo/inversion
+        for(int i=0;i<listaCuotas.size();i++){
+            if(i==0){
+                prestamo=listaCuotas.get(i).getFlujo()+cronograma.getInformacion().montoCuotaFinal;
+            }else{
+                flujoCaja.add(listaCuotas.get(i).getFlujo());
+            }
+        }
+        //FALTA LA COK ANUAL D: PIPIPI
+        VAN= CalculadoraVAN.calcularVAN(
+                cronograma.getInformacion().getCokAnual(),
+                cronograma.getInformacion().getFrecuenciaPago(),
+                prestamo,
+                flujoCaja
+        );
+
+        //Calculo de la TIR, para ello incluimos el prestamo en el flujo de caja
+        flujoCaja.add(0,prestamo);
+
+        // Convertir List<Double> a double[]
+        double[] arrayFlujoCaja = flujoCaja.stream()
+                .mapToDouble(Double::doubleValue)
+                .toArray();
+        TIR= CalculadoraTIR.calcularTIR(arrayFlujoCaja);
+
+        //Creamos un objeto Indicadores y lo rellenamos con lo que obtenemos mediante el builder
+        Indicadores indicadores = Indicadores.builder()
+                .VAN(Utilidades.redondear(VAN,2))
+                .TIR(Utilidades.redondear(TIR,2))
+                .build();
+
+        //Se actualiza el cronograma
+        cronograma.setIndicadores(indicadores);
+
     }
     private void validacionesConPlazoGracia(DatosEntradaCronograma datosEntradaCronograma){
 

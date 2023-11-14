@@ -33,6 +33,10 @@ public class Cronograma {
     private Informacion informacion;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "indicadores_id", referencedColumnName = "id")
+    private Indicadores indicadores;
+
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "vehiculo_id", referencedColumnName = "id")
     private Vehiculo vehiculo;
 

@@ -35,6 +35,7 @@ public class DatosEntradaCronograma {
     public String frecuenciaPago;
     public String fechaInicio;
     public double porcentajeCuotaFinal;
+    public double cokAnual;
 
 
 }

@@ -199,7 +199,7 @@ public class CalculadoraCuota {
                 cuotaNueva.setCuota(columnasCronogramaPago.cuota);
                 cuotaNueva.setFechaDePago(columnasCronogramaPago.fechaVencimiento);
                 cuotaNueva.setSaldoFinal(columnasCronogramaPago.saldoFinal);
-                cuotaNueva.setFlujo(columnasCronogramaPago.flujo);
+                cuotaNueva.setFlujo(-columnasCronogramaPago.flujo);
             }
 
             listaCuotas.add(cuotaNueva);
@@ -230,7 +230,7 @@ public class CalculadoraCuota {
         ultimaCuota.setCuota(Utilidades.redondear(variablesIntermediasCalculoCronograma.cuotaFinal + amortizacion + interes + valorSeguroDesgravamen,2));
         ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(variablesIntermediasCalculoCronograma.fechaInicio, (int) variablesIntermediasCalculoCronograma.numeroCuotas + 1, datosEntradaCronograma.frecuenciaPago));
         ultimaCuota.setSaldoFinal(0);
-        ultimaCuota.setFlujo(
+        ultimaCuota.setFlujo(-
                 Utilidades.redondear(
                         variablesIntermediasCalculoCronograma.cuotaFinal +
                         columnasCronogramaPago.seguroVehicular +

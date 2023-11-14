@@ -64,6 +64,8 @@ public class Informacion {
     public double montoCuotaFinal;
     @Column(name = "frecuencia_pago", length = 100, nullable = false)
     public String frecuenciaPago;
+    @Column(name = "COK_anual", length = 100, nullable = false)
+    public double cokAnual;
 
     @ManyToMany
     private List<Moneda> monedas;
