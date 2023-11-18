@@ -204,7 +204,8 @@ public class CronogramaServiceImpl implements CronogramaService {
                 .plazoTasaInteres(datosEntradaCronograma.plazoTasaInteres)
                 .porcentajeTasaInteres(datosEntradaCronograma.porcentajeTasaInteres)
                 .capitalizacion(datosEntradaCronograma.capitalizacion)
-                .tiempoPlazoDeGracia(datosEntradaCronograma.tiempoPlazoDeGracia)
+                .tiempoPlazoDeGraciaParcial(datosEntradaCronograma.tiempoPlazoDeGraciaParcial)
+                .tiempoPlazoDeGraciaTotal(datosEntradaCronograma.tiempoPlazoDeGraciaTotal)
                 .porcentajeSeguroDesgravamen(datosEntradaCronograma.porcentajeSeguroDesgravamen)
                 .tiempoSeguroDesgravamen(datosEntradaCronograma.tiempoSeguroDesgravamen)
                 .porcentajeSeguroVehicular(datosEntradaCronograma.porcentajeSeguroVehicular)
@@ -303,15 +304,27 @@ public class CronogramaServiceImpl implements CronogramaService {
             //Si no se ingresa el plazo de gracia, se devuelve un error
             throw new ValidationException("No se ingreso el plazo de gracia");
         }
-        if(datosEntradaCronograma.getTiempoPlazoDeGracia()==null || datosEntradaCronograma.tiempoPlazoDeGracia==0){
-            //Si no se ingresa el tiempo del plazo de gracia, se devuelve un error
-            throw new ValidationException("No se ingreso el tiempo del plazo de gracia o es 0");
+        if(datosEntradaCronograma.getPlazoDeGracia().equalsIgnoreCase("PARCIAL")){
+
+            if(datosEntradaCronograma.getTiempoPlazoDeGraciaParcial()==null || datosEntradaCronograma.tiempoPlazoDeGraciaParcial==0){
+                //Si no se ingresa el tiempo del plazo de gracia, se devuelve un error
+                throw new ValidationException("No se ingreso el tiempo del plazo de gracia parcial o es 0");
+            }
         }
-        if(datosEntradaCronograma.getTiempoPlazoDeGracia()>mitadCuotasTotales){
-            //Si el plazo de gracia es mayor a la mitad de las cuotas totales, se devuelve un error
+
+        if(datosEntradaCronograma.getPlazoDeGracia().equalsIgnoreCase("TOTAL")){
+            if(datosEntradaCronograma.getTiempoPlazoDeGraciaTotal()==null || datosEntradaCronograma.tiempoPlazoDeGraciaTotal==0){
+                //Si no se ingresa el tiempo del plazo de gracia, se devuelve un error
+                throw new ValidationException("No se ingreso el tiempo del plazo de gracia total o es 0");
+            }
+        }
+
+        if(datosEntradaCronograma.getTiempoPlazoDeGraciaParcial()+ datosEntradaCronograma.getTiempoPlazoDeGraciaTotal()>=cuotasTotales){
+            //Si el plazo de gracia es mayor a las cuotas , se devuelve un error
             throw new ValidationException("" +
-                    "El plazo de gracia no puede ser mayor a la mitad de las cuotas totales dado la frecuencia de pago" +
-                    ". Cuotas totales: "+(int)cuotasTotales+" , mitad de cuotas totales: "+ (int)mitadCuotasTotales+", frecuencia de pago elegida: "+ datosEntradaCronograma.getFrecuenciaPago().toUpperCase());
+                    "El plazo de gracia entre parcial y total no puede ser mayor o igual al total de cuotas financiadas" +
+                    ". Cuotas totales: "+(int)cuotasTotales+" , frecuencia de pago elegida: "+ datosEntradaCronograma.getFrecuenciaPago().toUpperCase()+
+            ", Suma del plazo de gracia parcial y total: "+(datosEntradaCronograma.getTiempoPlazoDeGraciaParcial()+ datosEntradaCronograma.getTiempoPlazoDeGraciaTotal()));
         }
 
     }

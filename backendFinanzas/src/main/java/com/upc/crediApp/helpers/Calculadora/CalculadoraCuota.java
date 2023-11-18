@@ -14,6 +14,7 @@ public class CalculadoraCuota {
     public static String SIN_PLAZO_GRACIA="S";
     public static String PLAZO_GRACIA_TOTAL="T";
     public static String PLAZO_GRACIA_PARCIAL="P";
+    public static String PLAZO_GRACIA_TOTAL_Y_PARCIAL="TP";
 
     public static int CUOTA_CERO=0;
 
@@ -24,6 +25,8 @@ public class CalculadoraCuota {
         //Caso de calculo de la cuota con plazo de gracia parcial
         //Caso de calculo de la cuota con plazo de gracia total
         //Caso de que se tiene que calcular la cuota cuando ya se ha sido afectado por algun plazo de gracia (total o parcial)
+
+        //Si es ambos , entonces primera se calcula el plazo de gracia total y luego con el plazo de gracia parcial
 
         if(estadoPlazoGracia.equalsIgnoreCase(SIN_PLAZO_GRACIA)){
             //SI ES SIN PLAZO DE GRACIA
@@ -122,7 +125,14 @@ public class CalculadoraCuota {
 
         String ESTADO_PLAZO_GRACIA = determinarEstadoPlazoGracia(datosEntradaCronograma);
 
+        //Obtenemos el numero de cuotas parciales y totales
         double numeroCuotasParciales= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaParcial;
+
+        double numeroCuotasPlazoGraciaParcial= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaParcial;
+        double numeroCuotasPlazoGraciaTotal= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaTotal;
+
+        double auxNumeroCuotasPlazoGraciaTotal=0;
+        double auxNumeroCuotasPlazoGraciaParcial=0;
 
 
         //Instanciamos lista de cuotas
@@ -149,10 +159,21 @@ public class CalculadoraCuota {
                 cuotaNueva.setFlujo(columnasCronogramaPago.saldoInicial);
             }else{
 
-                if(cuotaActual>numeroCuotasParciales) {
+                if(cuotaActual>numeroCuotasPlazoGraciaParcial+numeroCuotasPlazoGraciaTotal){
                     ESTADO_PLAZO_GRACIA = SIN_PLAZO_GRACIA;
                 }
 
+                // SI HAY PLAZO DE GRACIA TOTAL Y ANUAL
+                if(datosEntradaCronograma.plazoDeGracia.equals("AMBOS")){
+                    //Primero se calcula el plazo de gracia total
+                    if(auxNumeroCuotasPlazoGraciaTotal<numeroCuotasPlazoGraciaTotal) {
+                        ESTADO_PLAZO_GRACIA = PLAZO_GRACIA_TOTAL;
+                        auxNumeroCuotasPlazoGraciaTotal++;
+                    }else if(auxNumeroCuotasPlazoGraciaParcial<numeroCuotasPlazoGraciaParcial){
+                        ESTADO_PLAZO_GRACIA = PLAZO_GRACIA_PARCIAL;
+                        auxNumeroCuotasPlazoGraciaParcial++;
+                    }
+                }
 
                 columnasCronogramaPago.numeroCuota= cuotaActual;
                 columnasCronogramaPago.interes= Utilidades.redondear(columnasCronogramaPago.saldoInicial*(variablesIntermediasCalculoCronograma.tasaEfectiva/100),2);
@@ -294,8 +315,8 @@ public class CalculadoraCuota {
                         .cuotaInicial(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaInicial()))
                         .cuotaFinal(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(), datosEntradaCronograma.getPorcentajeCuotaFinal()))
                         .numeroCuotas((int) CalculadoraCuota.calcularNumeroCuotasTotales(datosEntradaCronograma.getNumeroAnios(), datosEntradaCronograma.getFrecuenciaPago()))
-                        .numeroCuotasPlazoGraciaParcial(datosEntradaCronograma.getTiempoPlazoDeGracia())
-                        .numeroCuotasPlazoGraciaTotal(datosEntradaCronograma.getTiempoPlazoDeGracia())
+                        .numeroCuotasPlazoGraciaParcial(datosEntradaCronograma.getTiempoPlazoDeGraciaParcial())
+                        .numeroCuotasPlazoGraciaTotal(datosEntradaCronograma.getTiempoPlazoDeGraciaTotal())
                         .build();
 
         return variablesIntermediasCalculoCronograma;

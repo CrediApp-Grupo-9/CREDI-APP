@@ -22,9 +22,15 @@ public class DatosEntradaCronograma {
     public String plazoTasaInteres;
     public double porcentajeTasaInteres;
     public String capitalizacion;
+
+    //Plazo de Gracia
     @Nullable
     public String plazoDeGracia;
-    public Integer tiempoPlazoDeGracia;
+    //Controlar la validación, si plazoDeGracia es nulo, el plazo de gracia parcial y total son 0
+    public Integer tiempoPlazoDeGraciaParcial; //Parcial
+    public Integer tiempoPlazoDeGraciaTotal;// Total
+
+
     public double porcentajeSeguroDesgravamen;
     public String tiempoSeguroDesgravamen;
     public double porcentajeSeguroVehicular;
@@ -37,5 +43,9 @@ public class DatosEntradaCronograma {
     public double porcentajeCuotaFinal;
     public double cokAnual;
 
+    //Información
 
+    //Renovacion/devolver/comprarlo -> decision
+    //Saldo anterior = 0
+    //Saldo siguiente = 0 -> se calcularia en la cuota 25
 }

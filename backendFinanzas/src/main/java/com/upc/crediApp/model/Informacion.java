@@ -36,8 +36,10 @@ public class Informacion {
     public String capitalizacion;
     @Column(name = "plazo_de_gracia", length = 100, nullable = true)
     public String plazoDeGracia;
-    @Column(name = "tiempo_plazo_de_gracia", length = 100, nullable = true)
-    public int tiempoPlazoDeGracia;
+    @Column(name = "tiempo_plazo_de_gracia_parcial", length = 100, nullable = true)
+    public int tiempoPlazoDeGraciaParcial;
+    @Column(name = "tiempo_plazo_de_gracia_total", length = 100, nullable = true)
+    public int tiempoPlazoDeGraciaTotal;
     @Column(name = "porcentaje_seguro_desgravamen", length = 100, nullable = false)
     public double porcentajeSeguroDesgravamen;
     @Column(name = "tiempo_seguro_desgravamen", length = 100, nullable = false)
