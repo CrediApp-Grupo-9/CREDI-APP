@@ -164,16 +164,19 @@ public class CalculadoraCuota {
                 }
 
                 // SI HAY PLAZO DE GRACIA TOTAL Y ANUAL
-                if(datosEntradaCronograma.plazoDeGracia.equals("AMBOS")){
-                    //Primero se calcula el plazo de gracia total
-                    if(auxNumeroCuotasPlazoGraciaTotal<numeroCuotasPlazoGraciaTotal) {
-                        ESTADO_PLAZO_GRACIA = PLAZO_GRACIA_TOTAL;
-                        auxNumeroCuotasPlazoGraciaTotal++;
-                    }else if(auxNumeroCuotasPlazoGraciaParcial<numeroCuotasPlazoGraciaParcial){
-                        ESTADO_PLAZO_GRACIA = PLAZO_GRACIA_PARCIAL;
-                        auxNumeroCuotasPlazoGraciaParcial++;
+                if(datosEntradaCronograma.plazoDeGracia!=null){
+                    if(datosEntradaCronograma.plazoDeGracia.equals("AMBOS")){
+                        //Primero se calcula el plazo de gracia total
+                        if(auxNumeroCuotasPlazoGraciaTotal<numeroCuotasPlazoGraciaTotal) {
+                            ESTADO_PLAZO_GRACIA = PLAZO_GRACIA_TOTAL;
+                            auxNumeroCuotasPlazoGraciaTotal++;
+                        }else if(auxNumeroCuotasPlazoGraciaParcial<numeroCuotasPlazoGraciaParcial){
+                            ESTADO_PLAZO_GRACIA = PLAZO_GRACIA_PARCIAL;
+                            auxNumeroCuotasPlazoGraciaParcial++;
+                        }
                     }
                 }
+
 
                 columnasCronogramaPago.numeroCuota= cuotaActual;
                 columnasCronogramaPago.interes= Utilidades.redondear(columnasCronogramaPago.saldoInicial*(variablesIntermediasCalculoCronograma.tasaEfectiva/100),2);
