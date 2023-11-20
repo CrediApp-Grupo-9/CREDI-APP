@@ -4,6 +4,8 @@ import com.upc.crediApp.helpers.Utilidades.Utilidades;
 
 import java.util.List;
 
+import org.apache.poi.ss.formula.functions.Npv;
+
 public class CalculadoraVAN {
 
     public static double calcularCOKDeAcuerdoFrecuenciaPago(double COKAnual,String frecuenciaPago){
@@ -24,6 +26,11 @@ public class CalculadoraVAN {
 
         double sumaFlujos=0;
         double potencia=1;
+
+        //List<Double> flujoParaFormula=flujos;
+        //No debe tomar el flujo 0 , por lo que borramos el primer elemento
+        //flujoParaFormula.remove(0);
+
         //Calcular la suma de los todos los flujos
         for(double flujo:flujos){
             double denominador= Math.pow(1+COKFormaDecimal,potencia);

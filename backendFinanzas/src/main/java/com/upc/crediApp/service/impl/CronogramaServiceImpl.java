@@ -287,13 +287,15 @@ public class CronogramaServiceImpl implements CronogramaService {
         List<Moneda> monedas = new ArrayList<>();
         monedas.add(moneda);
 
+        double tasaInteresMensual= CalculadoraCuota.calcularTasaInteresEfectivaMensual(datosEntradaCronograma);
+
         cronograma.setTipoCronograma(datosEntradaCronograma.getTipoCronograma());
         //Creamos un objeto Informacion y lo rellenamos con lo que obtenemos mediante el builder
         Informacion information = Informacion.builder()
                 .numeroAnios(datosEntradaCronograma.numeroAnios)
                 .porcentajeCuotaInicial(datosEntradaCronograma.porcentajeCuotaInicial)
-                .plazoTasaInteres(datosEntradaCronograma.plazoTasaInteres)
-                .porcentajeTasaInteres(datosEntradaCronograma.porcentajeTasaInteres)
+                .plazoTasaInteres("MENSUAL") //datosEntradaCronograma.plazoTasaInteres
+                .porcentajeTasaInteres(tasaInteresMensual)
                 .capitalizacion(datosEntradaCronograma.capitalizacion)
                 .tiempoPlazoDeGraciaParcial(datosEntradaCronograma.tiempoPlazoDeGraciaParcial)
                 .tiempoPlazoDeGraciaTotal(datosEntradaCronograma.tiempoPlazoDeGraciaTotal)
@@ -310,7 +312,7 @@ public class CronogramaServiceImpl implements CronogramaService {
                 .montoCuotaFinal(Utilidades.calcularMontoAplicandoPorcentaje(datosEntradaCronograma.getPrecioVehiculo(),datosEntradaCronograma.getPorcentajeCuotaFinal()))
                 .frecuenciaPago(datosEntradaCronograma.frecuenciaPago)
                 .montoPrestamoFinanciar(montoAFinanciar)
-                .tipoTasaInteres(datosEntradaCronograma.tipoTasaInteres)
+                .tipoTasaInteres("EFECTIVA") //datosEntradaCronograma.tipoTasaInteres
                 .plazoDeGracia(datosEntradaCronograma.plazoDeGracia)
                 .abreviaturaTasaInteres(determinarAbreviaturaTasaInteres(datosEntradaCronograma))
                 .cokAnual(datosEntradaCronograma.cokAnual)
@@ -347,7 +349,6 @@ public class CronogramaServiceImpl implements CronogramaService {
         });
     }
 */
-
     public void rellenarIndicadores(List<Cuota> listaCuotas,Cronograma cronograma){
 
         double VAN=0;
@@ -358,12 +359,12 @@ public class CronogramaServiceImpl implements CronogramaService {
         // Si el numero de cuota es 0 entonces se toma el valor del primer flujo como prestamo/inversion
         for(int i=0;i<listaCuotas.size();i++){
             if(i==0){
-                prestamo=listaCuotas.get(i).getFlujo()+cronograma.getInformacion().montoCuotaFinal;
+                prestamo=listaCuotas.get(i).getFlujo();
             }else{
                 flujoCaja.add(listaCuotas.get(i).getFlujo());
             }
         }
-        //FALTA LA COK ANUAL D: PIPIPI
+
         VAN= CalculadoraVAN.calcularVAN(
                 cronograma.getInformacion().getCokAnual(),
                 cronograma.getInformacion().getFrecuenciaPago(),

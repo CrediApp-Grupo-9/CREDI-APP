@@ -123,6 +123,12 @@ public class CalculadoraCuota {
 
         String ESTADO_PLAZO_GRACIA = determinarEstadoPlazoGracia(datosEntradaCronograma);
 
+        //Instanciar variable monto del Prestamo
+        double montoPrestamo = variablesIntermediasCalculoCronograma.cuotaFinal+variablesIntermediasCalculoCronograma.montoAFinanciar;
+
+        //A esta variable montoPrestamo es la que debe aparecer en el cronograma, sin embargo el financiamiento
+        //se debe ir haciendo con el montoAFinanciar normal
+
         //Obtenemos el numero de cuotas parciales y totales
         double numeroCuotasPlazoGraciaParcial= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaParcial;
         double numeroCuotasPlazoGraciaTotal= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaTotal;
@@ -141,6 +147,7 @@ public class CalculadoraCuota {
 
             if(cuotaActual==CUOTA_CERO){
                 cuotaNueva.setSaldoInicial(columnasCronogramaPago.saldoInicial);
+                cuotaNueva.setMontoPrestamo(montoPrestamo);
                 cuotaNueva.setNumeroDeCuota(0);
                 cuotaNueva.setAmortizacion(0);
                 cuotaNueva.setInteres(0);
@@ -153,7 +160,7 @@ public class CalculadoraCuota {
                 cuotaNueva.setCuota(0);
                 cuotaNueva.setFechaDePago(datosEntradaCronograma.getFechaInicio());
                 cuotaNueva.setSaldoFinal(columnasCronogramaPago.saldoInicial);
-                cuotaNueva.setFlujo(columnasCronogramaPago.saldoInicial);
+                cuotaNueva.setFlujo(montoPrestamo);
             }else{
 
                 if(cuotaActual>numeroCuotasPlazoGraciaParcial+numeroCuotasPlazoGraciaTotal){
@@ -205,8 +212,11 @@ public class CalculadoraCuota {
                 columnasCronogramaPago.fechaVencimiento= CalculadoraFechas.calcularFechaDePago(datosEntradaCronograma.fechaInicio,cuotaActual, datosEntradaCronograma.frecuenciaPago);
                 columnasCronogramaPago.tipoPlazo=ESTADO_PLAZO_GRACIA;
 
+                montoPrestamo-=columnasCronogramaPago.amortizacion;
+
                 //Guardamos el saldo inicial y Actualizamos el valor del saldo inicial para la siguiente cuota
                 cuotaNueva.setSaldoInicial(Utilidades.redondear(columnasCronogramaPago.saldoInicial,2));
+                cuotaNueva.setMontoPrestamo(Utilidades.redondear(montoPrestamo,2));
                 columnasCronogramaPago.saldoInicial=columnasCronogramaPago.saldoFinal;
                 cuotaNueva.setNumeroDeCuota(cuotaActual);
                 cuotaNueva.setAmortizacion(columnasCronogramaPago.amortizacion);
@@ -257,6 +267,8 @@ public class CalculadoraCuota {
                         variablesIntermediasCalculoCronograma.cuotaFinal +
                         columnasCronogramaPago.seguroVehicular +
                         columnasCronogramaPago.portes +
+                                interes +
+                        valorSeguroDesgravamen +
                         columnasCronogramaPago.costosRegistrales +
                         columnasCronogramaPago.costosNotariales,2)
 
@@ -266,6 +278,9 @@ public class CalculadoraCuota {
     }
 
     public static ColumnasCronogramaPago instanciarColumnasCronogramaPago(DatosEntradaCronograma datosEntradaCronograma, VariablesIntermediasCalculoCronograma variablesIntermediasCalculoCronograma){
+
+        //el saldo inicial debe ser cuotón+ saldo prestamo
+        //pero el financiamiento se debe hacer en base al monto a financiar
 
         double saldoInicial= variablesIntermediasCalculoCronograma.montoAFinanciar;
         double amortizacion=0;
@@ -294,17 +309,19 @@ public class CalculadoraCuota {
         return columnasCronogramaPago;
     }
 
-    public static VariablesIntermediasCalculoCronograma instanciarVariablesIntermedias(DatosEntradaCronograma datosEntradaCronograma){
-
-        double tasaEfectiva;
+    public static double calcularTasaInteresEfectivaMensual(DatosEntradaCronograma datosEntradaCronograma){
 
         if(datosEntradaCronograma.getTipoTasaInteres().equalsIgnoreCase("EFECTIVA")) {
-            tasaEfectiva= CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
+            return CalculadoraTasaInteresEfectiva.convertirEfectivaAEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getFrecuenciaPago());
         }else{
             //Si no es efectiva (osea es nominal), se convierte a efectiva
             //La tasa efectiva nominal debe ser pasada a una tasa efectiva de acuerdo a la frecuencia de pago
-            tasaEfectiva= CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
+            return CalculadoraTasaInteresNominal.convertirATasaEfectivaDeAcuerdoALaFrecuenciaPago(datosEntradaCronograma.getPlazoTasaInteres(), datosEntradaCronograma.getPorcentajeTasaInteres(), datosEntradaCronograma.getCapitalizacion(), datosEntradaCronograma.getFrecuenciaPago());
         }
+    }
+    public static VariablesIntermediasCalculoCronograma instanciarVariablesIntermedias(DatosEntradaCronograma datosEntradaCronograma){
+
+        double tasaEfectiva= calcularTasaInteresEfectivaMensual(datosEntradaCronograma);
 
         VariablesIntermediasCalculoCronograma variablesIntermediasCalculoCronograma =
                 VariablesIntermediasCalculoCronograma.builder()
