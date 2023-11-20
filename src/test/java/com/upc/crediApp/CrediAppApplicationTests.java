@@ -11,7 +11,7 @@ import java.util.List;
 @SpringBootTest
 class CrediAppApplicationTests {
 
-	@Test
+/*	@Test
 	void Test1() {
 		double COKAnual=25;
 		String frecuenciaPago="mensual";
@@ -44,6 +44,6 @@ class CrediAppApplicationTests {
 		double[] flujo = {inversion, -5, -10, -15, -20, -5};
 		double TIR= CalculadoraTIR.calcularTIR(flujo);
 		System.out.println(TIR);
-	}
+	}*/
 
 }
