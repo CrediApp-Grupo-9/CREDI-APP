@@ -45,6 +45,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public Customer getCustomerById(Long id) {
+        return customerRepository.findById(id).orElseThrow(() -> new ValidationException("No existe el customer"));
+    }
+
+    @Override
     public Customer updateCustomer(Long idCustomer,CustomerDto customerDto) {
 
         Customer customer = customerRepository.findById(idCustomer).orElseThrow(() -> new ValidationException("No existe el customer"));

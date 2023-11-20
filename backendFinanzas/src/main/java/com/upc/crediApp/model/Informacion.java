@@ -69,6 +69,11 @@ public class Informacion {
     @Column(name = "COK_anual", length = 100, nullable = false)
     public double cokAnual;
 
+
+    //Aca podríamos añadir una variable llamada saldo_restante, el cual va a variar deacuerdo al tipo de cronograma, por lo general siempre será 0
+    @Column(name = "saldo_restante", length = 100, nullable = false)
+    public double saldoRestante;
+
     @ManyToMany
     private List<Moneda> monedas;
 

@@ -6,5 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface CronogramaRepository extends JpaRepository<Cronograma, Long> {
-    List<Cronograma> findAllByCustomerId(Long customerId);
+    //List<Cronograma> findAllByCustomerId(Long customerId);
+
+    List<Cronograma> findAllByPlanPagoId(Long planPagoId);
 }

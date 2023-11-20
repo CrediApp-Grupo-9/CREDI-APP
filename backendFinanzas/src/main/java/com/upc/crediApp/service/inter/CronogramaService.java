@@ -13,7 +13,8 @@ public interface CronogramaService {
     List<Cuota>getAllCuotasByCronograma(Long id);
     Informacion getInformacionByCronograma(Long id);
     void deleteCronograma(Long id);
-    Cronograma saveCronograma(Long customerId,DatosEntradaCronograma variablesCalculo);
 
-    List<Cronograma> getAllCronogramasByCustomerId(Long customerId);
+    Cronograma saveCronograma(Long planPagoId, DatosEntradaCronograma variablesCalculo);
+
+    List<Cronograma> getAllCronogramasByPlanPagoId(Long customerId);
 }

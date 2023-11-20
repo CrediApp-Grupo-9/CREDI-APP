@@ -11,6 +11,8 @@ public interface CustomerService {
 
     Customer createCustomer(CustomerDto customerDto);
 
+    Customer getCustomerById(Long id);
+
     Customer updateCustomer(Long id,CustomerDto customerDto);
 
     void deleteCustomer(Long id);

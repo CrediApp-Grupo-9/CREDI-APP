@@ -22,6 +22,8 @@ public class Cuota {
     public int numeroDeCuota;
     @Column(name = "fecha_de_pago", length = 100, nullable = false)
     public String fechaDePago;
+    @Column(name = "tipo_plazo", length = 100, nullable = false)
+    public String tipoPlazo;
     @Column(name = "saldo_inicial", length = 100, nullable = false)
     public double saldoInicial;
     @Column(name = "amortizacion", length = 100, nullable = false)

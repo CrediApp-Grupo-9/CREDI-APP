@@ -23,6 +23,12 @@ public class CustomerController {
         return new ResponseEntity<>(customerService.getAllCustomers(), org.springframework.http.HttpStatus.OK);
     }
 
+    @Transactional(readOnly = true)
+    @GetMapping("/{id}")
+    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id){
+        return new ResponseEntity<>(customerService.getCustomerById(id), org.springframework.http.HttpStatus.OK);
+    }
+
     @PostMapping()
     public ResponseEntity<Customer> createCustomer(@RequestBody CustomerDto customerDto){
         return new ResponseEntity<>(customerService.createCustomer(customerDto), org.springframework.http.HttpStatus.CREATED);

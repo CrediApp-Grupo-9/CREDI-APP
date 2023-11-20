@@ -21,13 +21,13 @@ public class CronogramaController {
     //Method: GET
 
     @Transactional
-    @GetMapping("/{customerId}/cronograma")
-    public ResponseEntity<List<Cronograma>> getAllCronogramasByCustomerId(@PathVariable Long customerId){
-        return new ResponseEntity<>(cronogramaService.getAllCronogramasByCustomerId(customerId), org.springframework.http.HttpStatus.OK);
+    @GetMapping("/{planPagoId}/cronograma")
+    public ResponseEntity<List<Cronograma>> getAllCronogramasByPlanPagoId(@PathVariable Long planPagoId){
+        return new ResponseEntity<>(cronogramaService.getAllCronogramasByPlanPagoId(planPagoId), org.springframework.http.HttpStatus.OK);
     }
-    @PostMapping("/{customerId}/calculoCronograma")
-    public ResponseEntity<Cronograma> calcularCronograma(@PathVariable Long customerId, @RequestBody DatosEntradaCronograma datosEntradaCronograma){
-        return new ResponseEntity<>(cronogramaService.saveCronograma(customerId,datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
+    @PostMapping("/{planPagoId}/calculoCronograma")
+    public ResponseEntity<Cronograma> calcularCronograma(@PathVariable Long planPagoId, @RequestBody DatosEntradaCronograma datosEntradaCronograma){
+        return new ResponseEntity<>(cronogramaService.saveCronograma(planPagoId,datosEntradaCronograma),org.springframework.http.HttpStatus.OK);
     }
 
 

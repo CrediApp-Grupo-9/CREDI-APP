@@ -43,7 +43,11 @@ public class DatosEntradaCronograma {
     public double porcentajeCuotaFinal;
     public double cokAnual;
 
-    //Información
+    //Información correspondiente al tipo de cronograma
+    public String tipoCronograma;
+
+    //Informacion correspondiente al auto tasado
+    public double valorAutoTasado;
 
     //Renovacion/devolver/comprarlo -> decision
     //Saldo anterior = 0

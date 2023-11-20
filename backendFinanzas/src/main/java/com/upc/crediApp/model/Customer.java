@@ -32,8 +32,13 @@ public class Customer {
     public String username;
     @Column(name = "password", length = 100, nullable = false)
     public String password;
+/*    @OneToMany(mappedBy = "customer")
+    @JsonIgnore
+    public List<Cronograma> cronograma;*/
+
+
     @OneToMany(mappedBy = "customer")
     @JsonIgnore
-    public List<Cronograma> cronograma;
+    public List<PlanPago> planPago;
 
 }

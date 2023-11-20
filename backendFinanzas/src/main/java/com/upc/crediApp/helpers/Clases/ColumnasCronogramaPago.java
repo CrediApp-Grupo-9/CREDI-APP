@@ -8,6 +8,7 @@ import lombok.Data;
 public class ColumnasCronogramaPago {
     public int numeroCuota;
     public String fechaVencimiento;
+    public String tipoPlazo;
     public double saldoInicial;
     public double interes;
     public double cuota;

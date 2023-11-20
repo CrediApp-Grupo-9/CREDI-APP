@@ -24,9 +24,13 @@ public class Cronograma {
     @OneToMany(mappedBy = "cronograma")
     public List<Cuota> cuotas;
 
-    @ManyToOne()
+/*    @ManyToOne()
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    private Customer customer;*/
+
+    @ManyToOne()
+    @JoinColumn(name = "plan_pago_id", nullable = false)
+    private PlanPago planPago;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "informacion_id", referencedColumnName = "id")
@@ -39,5 +43,8 @@ public class Cronograma {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "vehiculo_id", referencedColumnName = "id")
     private Vehiculo vehiculo;
+
+    @Column(name = "tipo_cronograma",length = 100, nullable = false)
+    private String tipoCronograma;
 
 }

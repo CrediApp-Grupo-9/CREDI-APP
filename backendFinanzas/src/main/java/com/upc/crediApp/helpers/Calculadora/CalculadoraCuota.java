@@ -15,9 +15,7 @@ public class CalculadoraCuota {
     public static String PLAZO_GRACIA_TOTAL="T";
     public static String PLAZO_GRACIA_PARCIAL="P";
     public static String PLAZO_GRACIA_TOTAL_Y_PARCIAL="TP";
-
     public static int CUOTA_CERO=0;
-
     public static double realizarCalculoCuotaSegunFrecuenciaPago(double saldo, double tasaInteres, double tasaDesgravamen, int tiempoDeFinanciamiento,int tiempoCuotaActual,String estadoPlazoGracia) {
 
         //Hay 4 casos
@@ -126,8 +124,6 @@ public class CalculadoraCuota {
         String ESTADO_PLAZO_GRACIA = determinarEstadoPlazoGracia(datosEntradaCronograma);
 
         //Obtenemos el numero de cuotas parciales y totales
-        double numeroCuotasParciales= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaParcial;
-
         double numeroCuotasPlazoGraciaParcial= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaParcial;
         double numeroCuotasPlazoGraciaTotal= variablesIntermediasCalculoCronograma.numeroCuotasPlazoGraciaTotal;
 
@@ -148,6 +144,7 @@ public class CalculadoraCuota {
                 cuotaNueva.setNumeroDeCuota(0);
                 cuotaNueva.setAmortizacion(0);
                 cuotaNueva.setInteres(0);
+                cuotaNueva.setTipoPlazo("N");
                 cuotaNueva.setSeguroDesgravamen(0);
                 cuotaNueva.setSeguroVehicular(0);
                 cuotaNueva.setPortes(0);
@@ -176,7 +173,6 @@ public class CalculadoraCuota {
                         }
                     }
                 }
-
 
                 columnasCronogramaPago.numeroCuota= cuotaActual;
                 columnasCronogramaPago.interes= Utilidades.redondear(columnasCronogramaPago.saldoInicial*(variablesIntermediasCalculoCronograma.tasaEfectiva/100),2);
@@ -207,7 +203,7 @@ public class CalculadoraCuota {
 
                 columnasCronogramaPago.flujo= Utilidades.redondear(columnasCronogramaPago.cuota+columnasCronogramaPago.seguroVehicular+columnasCronogramaPago.portes+columnasCronogramaPago.costosNotariales+columnasCronogramaPago.costosRegistrales,2);
                 columnasCronogramaPago.fechaVencimiento= CalculadoraFechas.calcularFechaDePago(datosEntradaCronograma.fechaInicio,cuotaActual, datosEntradaCronograma.frecuenciaPago);
-
+                columnasCronogramaPago.tipoPlazo=ESTADO_PLAZO_GRACIA;
 
                 //Guardamos el saldo inicial y Actualizamos el valor del saldo inicial para la siguiente cuota
                 cuotaNueva.setSaldoInicial(Utilidades.redondear(columnasCronogramaPago.saldoInicial,2));
@@ -215,6 +211,7 @@ public class CalculadoraCuota {
                 cuotaNueva.setNumeroDeCuota(cuotaActual);
                 cuotaNueva.setAmortizacion(columnasCronogramaPago.amortizacion);
                 cuotaNueva.setInteres(columnasCronogramaPago.interes);
+                cuotaNueva.setTipoPlazo(columnasCronogramaPago.tipoPlazo);
                 cuotaNueva.setSeguroDesgravamen(columnasCronogramaPago.seguroDesgravamen);
                 cuotaNueva.setSeguroVehicular(columnasCronogramaPago.seguroVehicular);
                 cuotaNueva.setPortes(datosEntradaCronograma.getPortes());
@@ -251,6 +248,7 @@ public class CalculadoraCuota {
         ultimaCuota.setPortes(columnasCronogramaPago.portes);
         ultimaCuota.setCostosRegistrales(columnasCronogramaPago.costosRegistrales);
         ultimaCuota.setCostosNotariales(columnasCronogramaPago.costosNotariales);
+        ultimaCuota.setTipoPlazo(SIN_PLAZO_GRACIA);
         ultimaCuota.setCuota(Utilidades.redondear(variablesIntermediasCalculoCronograma.cuotaFinal + amortizacion + interes + valorSeguroDesgravamen,2));
         ultimaCuota.setFechaDePago(CalculadoraFechas.calcularFechaDePago(variablesIntermediasCalculoCronograma.fechaInicio, (int) variablesIntermediasCalculoCronograma.numeroCuotas + 1, datosEntradaCronograma.frecuenciaPago));
         ultimaCuota.setSaldoFinal(0);
@@ -282,6 +280,7 @@ public class CalculadoraCuota {
                 .saldoInicial(Utilidades.redondear(saldoInicial,2))
                 .interes(interes)
                 .cuota(0)
+                .tipoPlazo("N")
                 .amortizacion(amortizacion)
                 .seguroDesgravamen(valorSeguroDesgravamen)
                 .seguroVehicular(valorSeguroVehicular)

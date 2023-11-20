@@ -9,6 +9,7 @@ import com.upc.crediApp.helpers.Utilidades.Utilidades;
 import com.upc.crediApp.model.*;
 import com.upc.crediApp.repository.*;
 import com.upc.crediApp.service.inter.CronogramaService;
+import com.upc.crediApp.service.inter.PlanPagoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,9 @@ public class CronogramaServiceImpl implements CronogramaService {
     @Autowired
     private MonedaRepository monedaRepository;
 
+    @Autowired
+    private PlanPagoRepository planPagoRepository;
+
     @Override
     public List<Cronograma> getAllCronogramas() {
         return null;
@@ -52,6 +56,9 @@ public class CronogramaServiceImpl implements CronogramaService {
     @Override
     public void deleteCronograma(Long id) {
     }
+
+    //TODO: REVISAR ESTO, AHORA YA NO SE GUARDA EL CRONOGRAMA EN EL CUSTOMER, ES EN EL PLAN DE PAGOS
+/*
     @Override
     public Cronograma saveCronograma(Long customerId, DatosEntradaCronograma datosEntradaCronograma) {
 
@@ -69,7 +76,7 @@ public class CronogramaServiceImpl implements CronogramaService {
         rellenarCuotas(listaCuotas,nuevoCronograma);
         rellenarInformacion(datosEntradaCronograma,nuevoCronograma);
         rellenarVehiculo(datosEntradaCronograma,nuevoCronograma);
-        rellenarCustomer(customerId,nuevoCronograma);
+        //rellenarCustomer(customerId,nuevoCronograma);
         rellenarIndicadores(listaCuotas,nuevoCronograma);
 
         //Primero se guarda el cronograma y luego se guardan las cuotas del cronograma
@@ -79,13 +86,70 @@ public class CronogramaServiceImpl implements CronogramaService {
 
         return nuevoCronograma;
     }
+*/
 
     @Override
-    public List<Cronograma> getAllCronogramasByCustomerId(Long customerId) {
-        if(!customerRepository.existsById(customerId)){
-            throw new ValidationException("No existe el customer con el id: "+customerId);
+    public Cronograma saveCronograma(Long planPagoId, DatosEntradaCronograma datosEntradaCronograma) {
+
+        validacionPlanPago(planPagoId);
+        validacionMoneda(datosEntradaCronograma);
+        validacionAutoTasado(datosEntradaCronograma);
+        validacionTipoCronograma(datosEntradaCronograma);
+
+        validarDatosEntrada(datosEntradaCronograma);
+        convertirTodosLosCamposAMayuscula(datosEntradaCronograma);
+
+        Cronograma nuevoCronograma= Cronograma.builder().build();
+
+        List<Cuota> listaCuotas= calcularListaCuotasSegunPlazo(datosEntradaCronograma);
+
+        rellenarCuotas(listaCuotas,nuevoCronograma);
+        rellenarInformacion(datosEntradaCronograma,nuevoCronograma);
+        rellenarVehiculo(datosEntradaCronograma,nuevoCronograma);
+        rellenarIndicadores(listaCuotas,nuevoCronograma);
+
+        rellenarPlanPago(planPagoId,nuevoCronograma);
+
+        //Primero se guarda el cronograma y luego se guardan las cuotas del cronograma
+        cronogramaRepository.save(nuevoCronograma)
+                .getCuotas()
+                .forEach(cuota -> cuotaRepository.save(cuota));
+
+        return nuevoCronograma;
+
+    }
+
+    private void validacionPlanPago(Long planPagoId){
+        if(!planPagoRepository.existsById(planPagoId)){
+            throw new ValidationException("No existe el plan de pago con el id: "+planPagoId);
         }
-        return cronogramaRepository.findAllByCustomerId(customerId);
+    }
+    private void rellenarPlanPago(Long idPlanPago,Cronograma cronograma){
+
+        planPagoRepository.findById(idPlanPago).ifPresent(planPago -> {
+
+            if(planPago.getCronograma()==null){
+                planPago.setCronograma(new ArrayList<>());
+            }
+            List<Cronograma> cronogramas = planPago.getCronograma();
+            cronogramas.add(cronograma);
+            planPago.setCronograma(cronogramas);
+
+
+            planPagoRepository.save(planPago);
+            cronograma.setPlanPago(planPago);
+
+        });
+    }
+
+
+    //TODO: REVISAR ESTE MÉTODO
+    @Override
+    public List<Cronograma> getAllCronogramasByPlanPagoId(Long planPagoId) {
+        if(!planPagoRepository.existsById(planPagoId)){
+            throw new ValidationException("No existe el plan de pago con el id: "+planPagoId);
+        }
+        return cronogramaRepository.findAllByPlanPagoId(planPagoId);
     }
 
     private String determinarAbreviaturaTasaInteres(DatosEntradaCronograma datosEntradaCronograma){
@@ -102,16 +166,6 @@ public class CronogramaServiceImpl implements CronogramaService {
     private List<Cuota> calcularListaCuotasSegunPlazo(DatosEntradaCronograma datosEntradaCronograma){
 
         return CalculadoraCuota.obtenerListaCuotas(datosEntradaCronograma);
-/*        if(datosEntradaCronograma.getPlazoDeGracia()==null)return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
-
-        switch (datosEntradaCronograma.getPlazoDeGracia().toUpperCase()){
-            case "PARCIAL":
-                return CalculadoraCuota.obtenerListaCuotasMetodoConPlazoGraciaParcial(datosEntradaCronograma);
-            case "TOTAL":
-                return CalculadoraCuota.obtenerListaCuotasMetodoConPlazoGraciaTotal(datosEntradaCronograma);
-            default:
-                return CalculadoraCuota.obtenerListaCuotasMetodoSinPlazoGracia(datosEntradaCronograma);
-        }*/
     }
     private void convertirTodosLosCamposAMayuscula(DatosEntradaCronograma datosEntradaCronograma){
 
@@ -166,6 +220,12 @@ public class CronogramaServiceImpl implements CronogramaService {
             throw new ValidationException("No se ingreso el tipo de moneda");
         }
 
+        if(datosEntradaCronograma.getTipoCronograma()!=null){
+            datosEntradaCronograma.setTipoCronograma(datosEntradaCronograma.getTipoCronograma().toUpperCase());
+        }else{
+            throw new ValidationException("No se ingreso el tipo de cronograma");
+        }
+
     }
     private void validarDatosEntrada(DatosEntradaCronograma datosEntradaCronograma){
 
@@ -186,6 +246,36 @@ public class CronogramaServiceImpl implements CronogramaService {
         }
         cronograma.setCuotas(cuotas);
     }
+
+    private double calcularSaldoRestanteMedianteTipoCronograma(DatosEntradaCronograma datosEntradaCronograma, Cronograma cronograma){
+
+        //Primero buscamos la ultima cuota del listado de cuotas del cronograma
+        Cuota ultimaCuota = cronograma.getCuotas().get(cronograma.getCuotas().size()-1);
+        //DEBE HABER UN TASADO DEL AUTO -> se debe poner manualments
+
+
+        //Supongamos que mi auto vale 20000 y mi tasado es 8000
+        //Si el tasado es menor al cuoton final, entonces la persona debe pagar la diferencia
+        // y el cuoton final es de ... 9000
+        // Entonces 8000-9000 = -1000 ( La persona debe pagar 1000)
+
+
+        // Si el tasado es mayor al cuoton final, entonces la persona tiene dinero extra
+        // Supongamos que mi auto vale 20000 y mi tasado es 30000
+        // y el cuoton final es de ... 9000
+        // Entonces 30000-9000 = 21000 ( La persona tiene 21000 extra que le serán devueltos)
+
+        if(datosEntradaCronograma.getTipoCronograma().equalsIgnoreCase("RENOVACION")){
+            return datosEntradaCronograma.getValorAutoTasado()-ultimaCuota.getCuota();
+            //Posibilidad de hacer el cambio en la ultima cuota ->ultimaCuota.setSaldoFinal(saldoRestante);
+        }else if(datosEntradaCronograma.getTipoCronograma().equalsIgnoreCase("DEVOLUCIÓN")) {
+            //El valor del auto tasado debería ser 0 en este caso , puesto que el cliente se lleva el auto
+            return 0;
+        }else{
+            return datosEntradaCronograma.getValorAutoTasado()-ultimaCuota.getCuota();
+            //Posibilidad de hacer el cambio en la ultima cuota ->ultimaCuota.setSaldoFinal(saldoRestante);
+        }
+    }
     private void rellenarInformacion(DatosEntradaCronograma datosEntradaCronograma, Cronograma cronograma){
 
 
@@ -197,6 +287,7 @@ public class CronogramaServiceImpl implements CronogramaService {
         List<Moneda> monedas = new ArrayList<>();
         monedas.add(moneda);
 
+        cronograma.setTipoCronograma(datosEntradaCronograma.getTipoCronograma());
         //Creamos un objeto Informacion y lo rellenamos con lo que obtenemos mediante el builder
         Informacion information = Informacion.builder()
                 .numeroAnios(datosEntradaCronograma.numeroAnios)
@@ -224,6 +315,7 @@ public class CronogramaServiceImpl implements CronogramaService {
                 .abreviaturaTasaInteres(determinarAbreviaturaTasaInteres(datosEntradaCronograma))
                 .cokAnual(datosEntradaCronograma.cokAnual)
                 .monedas(monedas)
+                .saldoRestante(calcularSaldoRestanteMedianteTipoCronograma(datosEntradaCronograma,cronograma))
                 .build();
         //Se actualiza el cronograma
         cronograma.setInformacion(information);
@@ -240,6 +332,9 @@ public class CronogramaServiceImpl implements CronogramaService {
         //Se actualiza el cronograma
         cronograma.setVehiculo(vehiculo);
     }
+
+    //TODO: YA NO RELLENAMOS CUSTOMER, AHORA SE RELLENA EL PLAN DE PAGOS
+/*
     public void rellenarCustomer(Long idCustomer, Cronograma cronograma){
         //Se actualiza el customer
         //Encontramos al customer por su id
@@ -251,6 +346,7 @@ public class CronogramaServiceImpl implements CronogramaService {
             //customerRepository.save(customer);
         });
     }
+*/
 
     public void rellenarIndicadores(List<Cuota> listaCuotas,Cronograma cronograma){
 
@@ -371,6 +467,30 @@ public class CronogramaServiceImpl implements CronogramaService {
         if(!customerRepository.existsById(idCustomer)){
             throw new ValidationException("No existe el customer con el id: "+idCustomer);
         }
+    }
+
+    private void validacionTipoCronograma(DatosEntradaCronograma datosEntradaCronograma){
+
+        List<String> tiposCronograma = new ArrayList<>();
+        tiposCronograma.add("RENOVACION");
+        tiposCronograma.add("DEVOLUCION");
+        tiposCronograma.add("COMPRARLO");
+
+        if(datosEntradaCronograma.getTipoCronograma().isEmpty()){
+            throw new ValidationException("No se ingreso el tipo de cronograma");
+        }
+
+        if(!tiposCronograma.contains(datosEntradaCronograma.getTipoCronograma().toUpperCase())){
+            throw new ValidationException("No se permite otro tipo que no sean RENOVACION, DEVOLUCION O COMPRARLO, No existe el tipo: "+datosEntradaCronograma.getTipoCronograma());
+        }
+
+
+    }
+
+    private void validacionAutoTasado(DatosEntradaCronograma datosEntradaCronograma){
+            if(datosEntradaCronograma.getValorAutoTasado()>datosEntradaCronograma.getPrecioVehiculo()){
+                throw new ValidationException("El valor del auto tasado no puede ser mayor al precio del vehiculo");
+            }
     }
 
     private void validacionMoneda(DatosEntradaCronograma datosEntradaCronograma){
